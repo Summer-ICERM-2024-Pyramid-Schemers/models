@@ -43,7 +43,7 @@ def getTMModel(season, league, model):
 
     return results
 
-def getTMBrierScores(season, league):
+def getTMBrierScores(season, league, model):
     """
     Returns a list containing Brier scores for each game of a given season in a given league
     
@@ -54,10 +54,20 @@ def getTMBrierScores(season, league):
         3 - League One
         4 - League Two
     
+    model - Which model to use
+        1 - An ordered probit model
+        2 - An ordered probit model trained on an OLS goal difference model
+   
     """
 
     data = getYearData(season, league)
-    model = getTMModel(season, league, 1)
+    if model == 1:
+        model = getTMModel(season, league, 1)
+    elif model == 2:
+        model = getTMModel(season, league, 2)
+    else:
+        raise Exception("Model must be 1 or 2")
+    
     y = model.predict(data[['Home','Value']])
     y['result'] = data['result']
     brierScores = []
@@ -83,17 +93,21 @@ def getTMBrierScores(season, league):
     return brierScores
 
 
-def plotTMBrierScores():
+def plotTMBrierScores(model):
     """
     Plots Brier scores from all leagues and seasons.
+    
+    model - Which model to use
+        1 - An ordered probit model
+        2 - An ordered probit model trained on an OLS goal difference model
     """
     briers = pd.DataFrame(columns=['Year', 'Premier League','Championship','League One','League Two'])
 
     for season in range(2010, 2024, 1):
-        prem = np.mean(getTMBrierScores(season, 1))
-        Ch = np.mean(getTMBrierScores(season, 2))
-        l1 = np.mean(getTMBrierScores(season, 3))
-        l2 = np.mean(getTMBrierScores(season, 4))
+        prem = np.mean(getTMBrierScores(season, 1, model))
+        Ch = np.mean(getTMBrierScores(season, 2, model))
+        l1 = np.mean(getTMBrierScores(season, 3, model))
+        l2 = np.mean(getTMBrierScores(season, 4, model))
         briers = pd.concat([pd.DataFrame([[season, prem, Ch, l1, l2]], 
                                         columns=briers.columns), briers], 
                                         ignore_index=True)
