@@ -15,42 +15,32 @@ def getYearData(season, league):
     """
     con = sqlite3.connect("english_football_data.sqlite")
 
-    gamesQuery = f"""
-    SELECT home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds 
+    query = f"""
+    SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
+    market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
+    home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
+    home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
+    away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
+    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
     FROM Matches
+    JOIN LineupMarketvalues AS home
+    ON Matches.id = home.match_id 
+    AND Matches.home_team_id = home.team_id
+    JOIN LineupMarketvalues AS away
+    ON Matches.id = away.match_id
+    AND Matches.away_team_id = away.team_id
     WHERE season = {season}
     AND league_id = {league}
     """
 
-    mvQuery = f"""
-    SELECT team_id, avg_market_val, total_market_val
-    FROM TeamMarketvalues
-    WHERE season = {season}
-    AND league_id = {league}
-    """
+    Games = pd.read_sql_query(query, con)
+    Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
+    Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
+    Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
+    Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
+    print(Games.head())
 
-    Games = pd.read_sql_query(gamesQuery, con)
-    marketValues = pd.read_sql_query(mvQuery, con)
-
-    Games = Games.merge(
-        marketValues.rename(columns={'total_market_val': 'home_team_total_value'}),
-        left_on='home_team_id',
-        right_on='team_id',
-        how='left'
-    ).drop('team_id', axis=1)
-
-    Games = Games.merge(
-        marketValues.rename(columns={'total_market_val': 'away_team_total_value'}),
-        left_on='away_team_id',
-        right_on='team_id',
-        how='left'
-    ).drop('team_id', axis=1)
-
-    Games['homeLogMV'] = np.log(Games['home_team_total_value'])
-    Games['awayLogMV'] = np.log(Games['away_team_total_value'])
-
-
-    intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iOdds', 'jOdds', 'drawOdds'])
+    intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iPurchase', 'jPurchase', 'iOdds', 'jOdds', 'drawOdds'])
 
     for i in range(len(Games)):
         match = Games.iloc[i]
@@ -69,6 +59,8 @@ def getYearData(season, league):
             jGoals = match['fulltime_away_goals']
             iValue = match['homeLogMV']
             jValue = match['awayLogMV']
+            iPurchase = match['homeLogPV']
+            jPurchase = match['awayLogPV']
             if match['fulltime_result'] == 'H':
                 result = 1
             elif match['fulltime_result'] == 'A':
@@ -86,6 +78,8 @@ def getYearData(season, league):
             iGoals = match['fulltime_away_goals']
             jValue = match['homeLogMV']
             iValue = match['awayLogMV']
+            jPurchase = match['homeLogPV']
+            iPurchase = match['awayLogPV']
             if match['fulltime_result'] == 'H':
                 result = -1
             elif match['fulltime_result'] == 'A':
@@ -93,25 +87,27 @@ def getYearData(season, league):
             elif match['fulltime_result'] == 'D':
                 result = 0
 
-        intTable = pd.concat([pd.DataFrame([[result, iHome, jHome, iGoals, jGoals, iValue, jValue, iOdds, jOdds, drawOdds]], 
+        intTable = pd.concat([pd.DataFrame([[result, iHome, jHome, iGoals, jGoals, iValue, jValue, iPurchase, jPurchase, iOdds, jOdds, drawOdds]], 
                                             columns=intTable.columns), intTable], 
                                             ignore_index=True)
         
+    finalTable = pd.DataFrame(columns=['result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds'])
 
-    finalTable = pd.DataFrame(columns=['result','goaldiff','Home','Value', 'iOdds', 'drawOdds', 'jOdds'])
     for i in range(len(intTable)):
         match = intTable.iloc[i]
         result = match['result']
         goaldiff = match['iGoals'] - match['jGoals']
         home = match['iHome'] - match['jHome']
         value = match['iValue'] - match['jValue']
-        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, match['iOdds'], match['drawOdds'], match['jOdds']]], 
+        purchaseValue = match['iPurchase'] - match['jPurchase']
+        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
                                             columns=finalTable.columns), finalTable], 
                                             ignore_index=True)
 
     finalTable = finalTable.apply(pd.to_numeric)
 
     return finalTable
+
 
 def getNonYearData(season, league):
     """
@@ -124,45 +120,34 @@ def getNonYearData(season, league):
         3 - League One
         4 - League Two
     """
-
     con = sqlite3.connect("english_football_data.sqlite")
 
-    gamesQuery = f"""
-    SELECT season AS gseason, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds 
+    query = f"""
+    SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
+    market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
+    home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
+    home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
+    away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
+    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
     FROM Matches
+    JOIN LineupMarketvalues AS home
+    ON Matches.id = home.match_id 
+    AND Matches.home_team_id = home.team_id
+    JOIN LineupMarketvalues AS away
+    ON Matches.id = away.match_id
+    AND Matches.away_team_id = away.team_id
     WHERE season != {season}
     AND league_id = {league}
     """
 
-    mvQuery = f"""
-    SELECT season AS mseason, team_id, avg_market_val, total_market_val
-    FROM TeamMarketvalues
-    WHERE season != {season}
-    AND league_id = {league}
-    """
+    Games = pd.read_sql_query(query, con)
+    Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
+    Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
+    Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
+    Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
+    print(Games.head())
 
-    Games = pd.read_sql_query(gamesQuery, con)
-    marketValues = pd.read_sql_query(mvQuery, con)
-
-    Games = Games.merge(
-        marketValues.rename(columns={'total_market_val': 'home_team_total_value'}),
-        left_on=['home_team_id', 'gseason'],
-        right_on=['team_id', 'mseason'],
-        how='left'
-    ).drop('team_id', axis=1)
-
-    Games = Games.merge(
-        marketValues.rename(columns={'total_market_val': 'away_team_total_value'}),
-        left_on=['away_team_id', 'gseason'],
-        right_on=['team_id', 'mseason'],
-        how='left'
-    ).drop('team_id', axis=1)
-
-    Games['homeLogMV'] = np.log(Games['home_team_total_value'])
-    Games['awayLogMV'] = np.log(Games['away_team_total_value'])
-
-
-    intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iOdds', 'jOdds', 'drawOdds'])
+    intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iPurchase', 'jPurchase', 'iOdds', 'jOdds', 'drawOdds'])
 
     for i in range(len(Games)):
         match = Games.iloc[i]
@@ -181,6 +166,8 @@ def getNonYearData(season, league):
             jGoals = match['fulltime_away_goals']
             iValue = match['homeLogMV']
             jValue = match['awayLogMV']
+            iPurchase = match['homeLogPV']
+            jPurchase = match['awayLogPV']
             if match['fulltime_result'] == 'H':
                 result = 1
             elif match['fulltime_result'] == 'A':
@@ -198,6 +185,8 @@ def getNonYearData(season, league):
             iGoals = match['fulltime_away_goals']
             jValue = match['homeLogMV']
             iValue = match['awayLogMV']
+            jPurchase = match['homeLogPV']
+            iPurchase = match['awayLogPV']
             if match['fulltime_result'] == 'H':
                 result = -1
             elif match['fulltime_result'] == 'A':
@@ -205,25 +194,27 @@ def getNonYearData(season, league):
             elif match['fulltime_result'] == 'D':
                 result = 0
 
-        intTable = pd.concat([pd.DataFrame([[result, iHome, jHome, iGoals, jGoals, iValue, jValue, iOdds, jOdds, drawOdds]], 
+        intTable = pd.concat([pd.DataFrame([[result, iHome, jHome, iGoals, jGoals, iValue, jValue, iPurchase, jPurchase, iOdds, jOdds, drawOdds]], 
                                             columns=intTable.columns), intTable], 
                                             ignore_index=True)
         
+    finalTable = pd.DataFrame(columns=['result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds'])
 
-    finalTable = pd.DataFrame(columns=['result','goaldiff','Home','Value', 'iOdds', 'drawOdds', 'jOdds'])
     for i in range(len(intTable)):
         match = intTable.iloc[i]
         result = match['result']
         goaldiff = match['iGoals'] - match['jGoals']
         home = match['iHome'] - match['jHome']
         value = match['iValue'] - match['jValue']
-        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, match['iOdds'], match['drawOdds'], match['jOdds']]], 
+        purchaseValue = match['iPurchase'] - match['jPurchase']
+        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
                                             columns=finalTable.columns), finalTable], 
                                             ignore_index=True)
 
     finalTable = finalTable.apply(pd.to_numeric)
 
     return finalTable
+
 
 def normOdds(iOdds, drawOdds, jOdds):
     juice = 1/iOdds + 1/drawOdds + 1/jOdds
