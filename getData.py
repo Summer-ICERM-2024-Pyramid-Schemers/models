@@ -79,12 +79,11 @@ def getYearData(season, league):
         home = match['iHome'] - match['jHome']
         value = match['iValue'] - match['jValue']
         purchaseValue = match['iPurchase'] - match['jPurchase']
-        finalTable.append([pd.DataFrame(result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds'])], 
-                                            columns=finalTable.columns, ignore_index = True)
-
-       #finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
-       #                                     columns=finalTable.columns), finalTable], 
-        #                                    ignore_index=True)'''
+        #finalTable.append([pd.DataFrame(result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds'])], 
+        #                                    columns=finalTable.columns, ignore_index = True)
+        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
+                                            columns=finalTable.columns), finalTable], 
+                                            ignore_index=True)
 
     finalTable = finalTable.apply(pd.to_numeric)
 

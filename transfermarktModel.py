@@ -134,9 +134,9 @@ def plotTMBrierScores(model):
     plt.savefig('TMModel2.png')
     plt.show()
     
-    
+    '''
 start = time.time()
 plotTMBrierScores(2)
 end = time.time()
 
-print(end-start)
+print(end-start)'''

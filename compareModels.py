@@ -1,6 +1,12 @@
+import matplotlib as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+import seaborn as sns
+
+from oddsModel import getOddsBrierScores
+from homeAdvModel import getHABrierScores
+from transfermarktModel import getTMBrierScores
 
 def compareModels(getM1BrierScores, getM2BrierScores):
     """
@@ -41,3 +47,48 @@ def compareModels(getM1BrierScores, getM2BrierScores):
                                         columns=comparison.columns), comparison], 
                                         ignore_index=True)
     return comparison
+
+def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
+    comparison = compareModels(getM1BrierScores, getM2BrierScores)
+    comparison = comparison.set_index("Year")
+    diffs = comparison.applymap(lambda x: x[0])
+    pvalues = comparison.applymap(lambda x: x[1])
+    lowerCI = comparison.applymap(lambda x: x[2])
+    upperCI = comparison.applymap(lambda x: x[3])
+
+    
+    df_combined = diffs.stack().reset_index()
+    df_combined.columns = ['League', 'Season', 'Brier_Diff']
+    df_combined['pvalue'] = pvalues.stack().values
+    
+    # Calculate error bounds
+    df_combined['lower_error'] = df_combined['Brier_Diff'] - lowerCI.stack().values
+    df_combined['upper_error'] = upperCI.stack().values - df_combined['Brier_Diff']
+    
+    # Plot points
+    sns.scatterplot(data=df_combined, x='Season', y='Brier_Diff', hue='League', style='League')
+    
+    # Add error bars
+    for league in df_combined['League'].unique():
+        league_data = df_combined[df_combined['League'] == league]
+        plt.errorbar(league_data['Season'], league_data['Brier_Diff'],
+                     yerr=[league_data['lower_error'], league_data['upper_error']],
+                     fmt='none', capsize=5, ecolor='gray', alpha=0.5)
+
+    # Customize the plot
+    plt.axhline(y=0, color='r', linestyle='--')
+    plt.title(f'Comparison of Brier Scores: {M1Title} - {M2Title}')
+    plt.xlabel('Season')
+    plt.ylabel('Difference in Brier Score')
+    plt.legend(title='League')
+    plt.savefig("OddsvsTMmodel1")
+    
+    # Display the plot
+    plt.show()
+
+
+def getoddsm1(season, league):
+    getTMBrierScores(season, league, 1)
+
+
+plotComparison(getOddsBrierScores, getoddsm1, "Odds", "Transfermarkt Model 1")
