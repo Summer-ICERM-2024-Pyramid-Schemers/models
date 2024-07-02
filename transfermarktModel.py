@@ -4,6 +4,7 @@ import pandas as pd
 import statsmodels.formula.api as smf
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from getData import getNonYearData, getYearData
+import time
 
 def getTMModel(season, league, model):
     
@@ -27,6 +28,7 @@ def getTMModel(season, league, model):
         model = OrderedModel(finalTable['result'],
                             finalTable[['Home', 'Value']],
                             distr = 'probit')
+        results = [model.fit()]
 
     # Peeters Model 2
     if model == 2:
@@ -37,9 +39,7 @@ def getTMModel(season, league, model):
         X_probit = predictedDiff.values.reshape(-1, 1)
         
         model = OrderedModel(outcome, X_probit, distr = 'probit')
-
-    # Fit the model
-    results = model.fit()
+        results = [OLSresults, model.fit()]
 
     return results
 
@@ -62,13 +62,24 @@ def getTMBrierScores(season, league, model):
 
     data = getYearData(season, league)
     if model == 1:
-        model = getTMModel(season, league, 1)
+        model = getTMModel(season, league, 1)[0]
+        y = model.predict(data[['Home','Value']])
     elif model == 2:
         model = getTMModel(season, league, 2)
+        OLSmodel = model[0]
+        probitModel = model[1]
+        intPred = OLSmodel.predict(data[['Home','Value']])
+        predictions = []
+
+        for i in intPred:
+            predictions.append(probitModel.predict(i)[0])
+        data['pred-loss'] = [pred[0] for pred in predictions]
+        data['pred-draw'] = [pred[1] for pred in predictions]
+        data['pred-win'] = [pred[2] for pred in predictions]
+        y = pd.DataFrame(predictions)
     else:
         raise Exception("Model must be 1 or 2")
     
-    y = model.predict(data[['Home','Value']])
     y['result'] = data['result']
     brierScores = []
 
@@ -120,4 +131,12 @@ def plotTMBrierScores(model):
     plt.ylabel('Brier Score')
     plt.grid(True)
 
+    plt.savefig('TMModel2.png')
     plt.show()
+    
+    
+start = time.time()
+plotTMBrierScores(2)
+end = time.time()
+
+print(end-start)

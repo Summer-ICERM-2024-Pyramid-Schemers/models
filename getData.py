@@ -79,9 +79,12 @@ def getYearData(season, league):
         home = match['iHome'] - match['jHome']
         value = match['iValue'] - match['jValue']
         purchaseValue = match['iPurchase'] - match['jPurchase']
-        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
-                                            columns=finalTable.columns), finalTable], 
-                                            ignore_index=True)
+        finalTable.append([pd.DataFrame(result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds'])], 
+                                            columns=finalTable.columns, ignore_index = True)
+
+       #finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
+       #                                     columns=finalTable.columns), finalTable], 
+        #                                    ignore_index=True)'''
 
     finalTable = finalTable.apply(pd.to_numeric)
 
@@ -218,5 +221,3 @@ def normOdds(iOdds, drawOdds, jOdds):
     jProb = 1/(jOdds*juice)
     
     return [iProb, drawProb, jProb]
-
-print(getNonYearData(2023, 1))
