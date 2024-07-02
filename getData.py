@@ -1,5 +1,6 @@
 import sqlite3
 import numpy as np
+import os
 import pandas as pd
 
 def getYearData(season, league):
@@ -13,32 +14,10 @@ def getYearData(season, league):
         3 - League One
         4 - League Two
     """
-    con = sqlite3.connect("english_football_data.sqlite")
 
-    query = f"""
-    SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
-    market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
-    home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
-    home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
-    away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
-    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
-    FROM Matches
-    JOIN LineupMarketvalues AS home
-    ON Matches.id = home.match_id 
-    AND Matches.home_team_id = home.team_id
-    JOIN LineupMarketvalues AS away
-    ON Matches.id = away.match_id
-    AND Matches.away_team_id = away.team_id
-    WHERE season = {season}
-    AND league_id = {league}
-    """
+    data = getData()
+    Games = data.query(f'season == {season} and league_id == {league}')
 
-    Games = pd.read_sql_query(query, con)
-    Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
-    Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
-    Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
-    Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
-    print(Games.head())
 
     intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iPurchase', 'jPurchase', 'iOdds', 'jOdds', 'drawOdds'])
 
@@ -120,32 +99,9 @@ def getNonYearData(season, league):
         3 - League One
         4 - League Two
     """
-    con = sqlite3.connect("english_football_data.sqlite")
 
-    query = f"""
-    SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
-    market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
-    home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
-    home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
-    away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
-    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
-    FROM Matches
-    JOIN LineupMarketvalues AS home
-    ON Matches.id = home.match_id 
-    AND Matches.home_team_id = home.team_id
-    JOIN LineupMarketvalues AS away
-    ON Matches.id = away.match_id
-    AND Matches.away_team_id = away.team_id
-    WHERE season != {season}
-    AND league_id = {league}
-    """
-
-    Games = pd.read_sql_query(query, con)
-    Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
-    Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
-    Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
-    Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
-    print(Games.head())
+    data = getData()
+    Games = data.query(f'season != {season} and league_id == {league}')
 
     intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iPurchase', 'jPurchase', 'iOdds', 'jOdds', 'drawOdds'])
 
@@ -216,6 +172,45 @@ def getNonYearData(season, league):
     return finalTable
 
 
+def getData():
+    """
+    Returns raw data for all matches of all leagues
+    """
+
+    if os.path.exists("rawData.pkl"):
+        print("File read successfully.")
+        return pd.read_pickle("rawData.pkl")
+    else:
+        con = sqlite3.connect("english_football_data.sqlite")
+
+        query = f"""
+        SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
+        market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
+        home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
+        home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
+        away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
+        away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
+        FROM Matches
+        JOIN LineupMarketvalues AS home
+        ON Matches.id = home.match_id 
+        AND Matches.home_team_id = home.team_id
+        JOIN LineupMarketvalues AS away
+        ON Matches.id = away.match_id
+        AND Matches.away_team_id = away.team_id
+        """
+
+        Games = pd.read_sql_query(query, con)
+        Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
+        Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
+        Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
+        Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
+
+        pd.to_pickle(Games, "rawData.pkl")
+        print("File pickled")
+
+        return Games
+
+
 def normOdds(iOdds, drawOdds, jOdds):
     juice = 1/iOdds + 1/drawOdds + 1/jOdds
     iProb = 1/(iOdds*juice)
@@ -223,3 +218,5 @@ def normOdds(iOdds, drawOdds, jOdds):
     jProb = 1/(jOdds*juice)
     
     return [iProb, drawProb, jProb]
+
+print(getNonYearData(2023, 1))
