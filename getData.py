@@ -2,7 +2,24 @@ import sqlite3
 import numpy as np
 import os
 import pandas as pd
+from functools import lru_cache
 
+def prepare_data(games_data: pd.DataFrame):
+    home_vec = np.random.choice([1,-1],size=len(games_data))
+
+    games_data.loc[:,"goaldiff"] = games_data.loc[:,'fulltime_home_goals'] - games_data.loc[:,'fulltime_away_goals']
+    games_data.loc[:,"Value"] = games_data.loc[:,'homeLogMV'] - games_data.loc[:,'awayLogMV']
+    games_data.loc[:,"PurchaseValue"] = games_data.loc[:,'homeLogPV'] - games_data.loc[:,'awayLogPV']
+    games_data.loc[:,["goaldiff","Value","PurchaseValue"]] *= home_vec[:,None]
+    games_data.loc[:,"Home"] = home_vec
+    games_data.loc[:,"result"] = np.sign(games_data.loc[:,"goaldiff"])
+
+    probsData = normOddsVectorized(games_data.loc[:,['home_odds','draw_odds','away_odds']].to_numpy())
+    games_data.loc[:,["iOdds","drawOdds","jOdds"]] = np.where(home_vec[:,None]==1,probsData,probsData[:,::-1])
+
+    # TODO test .to_numpy
+    return (games_data.loc[:,['match_id','result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds']]).apply(pd.to_numeric)
+    
 def getYearData(season, league):
     """
     Returns a dataframe containing matches from a season of a given league.
@@ -17,78 +34,7 @@ def getYearData(season, league):
 
     data = getData()
     Games = data.query(f'season == {season} and league_id == {league}')
-
-
-    intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iPurchase', 'jPurchase', 'iOdds', 'jOdds', 'drawOdds'])
-
-    for i in range(len(Games)):
-        match = Games.iloc[i]
-        oddsProbs = normOdds(match['home_odds'],
-                                match['draw_odds'],
-                                match['away_odds'])
-        teami = np.random.choice([0,1])
-        if teami == 0:
-            # Home team is team i, away team is team j
-            iOdds = oddsProbs[0]
-            drawOdds = oddsProbs[1]
-            jOdds = oddsProbs[2]
-            iHome = 1
-            jHome = 0
-            iGoals = match['fulltime_home_goals']
-            jGoals = match['fulltime_away_goals']
-            iValue = match['homeLogMV']
-            jValue = match['awayLogMV']
-            iPurchase = match['homeLogPV']
-            jPurchase = match['awayLogPV']
-            if match['fulltime_result'] == 'H':
-                result = 1
-            elif match['fulltime_result'] == 'A':
-                result = -1
-            elif match['fulltime_result'] == 'D':
-                result = 0
-        elif teami == 1:
-            # Away team is team i, home team is team j
-            iOdds = oddsProbs[2]
-            drawOdds = oddsProbs[1]
-            jOdds = oddsProbs[0]
-            jHome = 1
-            iHome = 0
-            jGoals = match['fulltime_home_goals']
-            iGoals = match['fulltime_away_goals']
-            jValue = match['homeLogMV']
-            iValue = match['awayLogMV']
-            jPurchase = match['homeLogPV']
-            iPurchase = match['awayLogPV']
-            if match['fulltime_result'] == 'H':
-                result = -1
-            elif match['fulltime_result'] == 'A':
-                result = 1
-            elif match['fulltime_result'] == 'D':
-                result = 0
-
-        intTable = pd.concat([pd.DataFrame([[result, iHome, jHome, iGoals, jGoals, iValue, jValue, iPurchase, jPurchase, iOdds, jOdds, drawOdds]], 
-                                            columns=intTable.columns), intTable], 
-                                            ignore_index=True)
-        
-    finalTable = pd.DataFrame(columns=['result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds'])
-
-    for i in range(len(intTable)):
-        match = intTable.iloc[i]
-        result = match['result']
-        goaldiff = match['iGoals'] - match['jGoals']
-        home = match['iHome'] - match['jHome']
-        value = match['iValue'] - match['jValue']
-        purchaseValue = match['iPurchase'] - match['jPurchase']
-        #finalTable.append([pd.DataFrame(result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds'])], 
-        #                                    columns=finalTable.columns, ignore_index = True)
-        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
-                                            columns=finalTable.columns), finalTable], 
-                                            ignore_index=True)
-
-    finalTable = finalTable.apply(pd.to_numeric)
-
-    return finalTable
-
+    return prepare_data(Games)
 
 def getNonYearData(season, league):
     """
@@ -104,76 +50,9 @@ def getNonYearData(season, league):
 
     data = getData()
     Games = data.query(f'season != {season} and league_id == {league}')
+    return prepare_data(Games)
 
-    intTable = pd.DataFrame(columns=['result','iHome','jHome','iGoals','jGoals','iValue', 'jValue', 'iPurchase', 'jPurchase', 'iOdds', 'jOdds', 'drawOdds'])
-
-    for i in range(len(Games)):
-        match = Games.iloc[i]
-        oddsProbs = normOdds(match['home_odds'],
-                                match['draw_odds'],
-                                match['away_odds'])
-        teami = np.random.choice([0,1])
-        if teami == 0:
-            # Home team is team i, away team is team j
-            iOdds = oddsProbs[0]
-            drawOdds = oddsProbs[1]
-            jOdds = oddsProbs[2]
-            iHome = 1
-            jHome = 0
-            iGoals = match['fulltime_home_goals']
-            jGoals = match['fulltime_away_goals']
-            iValue = match['homeLogMV']
-            jValue = match['awayLogMV']
-            iPurchase = match['homeLogPV']
-            jPurchase = match['awayLogPV']
-            if match['fulltime_result'] == 'H':
-                result = 1
-            elif match['fulltime_result'] == 'A':
-                result = -1
-            elif match['fulltime_result'] == 'D':
-                result = 0
-        elif teami == 1:
-            # Away team is team i, home team is team j
-            iOdds = oddsProbs[2]
-            drawOdds = oddsProbs[1]
-            jOdds = oddsProbs[0]
-            jHome = 1
-            iHome = 0
-            jGoals = match['fulltime_home_goals']
-            iGoals = match['fulltime_away_goals']
-            jValue = match['homeLogMV']
-            iValue = match['awayLogMV']
-            jPurchase = match['homeLogPV']
-            iPurchase = match['awayLogPV']
-            if match['fulltime_result'] == 'H':
-                result = -1
-            elif match['fulltime_result'] == 'A':
-                result = 1
-            elif match['fulltime_result'] == 'D':
-                result = 0
-
-        intTable = pd.concat([pd.DataFrame([[result, iHome, jHome, iGoals, jGoals, iValue, jValue, iPurchase, jPurchase, iOdds, jOdds, drawOdds]], 
-                                            columns=intTable.columns), intTable], 
-                                            ignore_index=True)
-        
-    finalTable = pd.DataFrame(columns=['result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds'])
-
-    for i in range(len(intTable)):
-        match = intTable.iloc[i]
-        result = match['result']
-        goaldiff = match['iGoals'] - match['jGoals']
-        home = match['iHome'] - match['jHome']
-        value = match['iValue'] - match['jValue']
-        purchaseValue = match['iPurchase'] - match['jPurchase']
-        finalTable = pd.concat([pd.DataFrame([[result, goaldiff, home, value, purchaseValue, match['iOdds'], match['drawOdds'], match['jOdds']]], 
-                                            columns=finalTable.columns), finalTable], 
-                                            ignore_index=True)
-
-    finalTable = finalTable.apply(pd.to_numeric)
-
-    return finalTable
-
-
+@lru_cache(1)
 def getData():
     """
     Returns raw data for all matches of all leagues
@@ -219,4 +98,24 @@ def normOdds(iOdds, drawOdds, jOdds):
     drawProb = 1/(drawOdds*juice)
     jProb = 1/(jOdds*juice)
     
-    return [iProb, drawProb, jProb]
+    return iProb, drawProb, jProb
+
+def normOddsVectorized(data):
+    temp = 1/data
+    juice = np.sum(temp,axis=1,keepdims=True)
+    return temp/juice
+
+if __name__ == "__main__":
+    rawdata = getData()
+    
+    data1 = prepare_data(rawdata,False)
+    data2 = prepare_data(rawdata,False)
+    data3 = prepare_data(rawdata,True)
+
+    print(np.all(data1 == data2))
+    cond_arr = data1 == data3
+    print(np.all(cond_arr))
+    if not np.all(cond_arr):
+        print(np.nonzero(data1 - data3))
+
+    #print(data1,data2,data3,sep="\n")
