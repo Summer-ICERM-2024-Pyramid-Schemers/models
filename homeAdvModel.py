@@ -1,6 +1,5 @@
 from time import perf_counter
 
-import numpy as np
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 from basemodel import BaseModel, DEFAULT_SEASONS

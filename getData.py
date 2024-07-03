@@ -1,10 +1,8 @@
+from functools import lru_cache
 import sqlite3
+
 import numpy as np
 import pandas as pd
-from functools import lru_cache
-import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.simplefilter(action='ignore', category=(SettingWithCopyWarning))
 
 
 def prepare_data(games_data: pd.DataFrame):
@@ -22,7 +20,6 @@ def prepare_data(games_data: pd.DataFrame):
     probsData = normOddsVectorized(games_data.loc[:,['home_odds','draw_odds','away_odds']].to_numpy())
     games_data.loc[:,["iOdds","drawOdds","jOdds"]] = np.where(home_vec[:,None]==1,probsData,probsData[:,::-1])
 
-    # TODO test .to_numpy
     return (games_data.loc[:,['result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds']]).apply(pd.to_numeric)
     
 def getYearData(season, league):

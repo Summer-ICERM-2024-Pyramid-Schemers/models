@@ -1,7 +1,5 @@
 from time import perf_counter
 
-import numpy as np
-
 from basemodel import BaseModel, DEFAULT_SEASONS
 from getData import getYearData
 

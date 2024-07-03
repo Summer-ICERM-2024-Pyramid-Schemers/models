@@ -1,6 +1,5 @@
 from time import perf_counter
 
-import numpy as np
 import statsmodels.formula.api as smf
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
@@ -92,7 +91,7 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
         OLSmodel,probitModel = cls.getModel(season, league)
         intPred = OLSmodel.predict(data[['Home','Value']])
-        predictions = np.array([probitModel.predict(i)[0] for i in intPred])
+        predictions = [probitModel.predict(i)[0] for i in intPred]
 
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_brier_scores(data)
