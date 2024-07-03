@@ -1,4 +1,4 @@
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
@@ -58,15 +58,15 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
 
     
     df_combined = diffs.stack().reset_index()
-    df_combined.columns = ['League', 'Season', 'Brier_Diff']
+    df_combined.columns = ['Season', 'League', 'Brier_Diff']
     df_combined['pvalue'] = pvalues.stack().values
     
     # Calculate error bounds
-    df_combined['lower_error'] = df_combined['Brier_Diff'] - lowerCI.stack().values
-    df_combined['upper_error'] = upperCI.stack().values - df_combined['Brier_Diff']
-    
+    df_combined['lower_error'] = np.abs(df_combined['Brier_Diff'] - lowerCI.stack().values)
+    df_combined['upper_error'] = np.abs(upperCI.stack().values - df_combined['Brier_Diff'])
+    print(df_combined)
     # Plot points
-    sns.scatterplot(data=df_combined, x='Season', y='Brier_Diff', hue='League', style='League')
+    sns.lineplot(data=df_combined, x='Season', y='Brier_Diff', hue='League', style='League')
     
     # Add error bars
     for league in df_combined['League'].unique():
