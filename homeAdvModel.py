@@ -38,36 +38,12 @@ class HomeAdvModel(BaseModel):
             3 - League One
             4 - League Two
         """
-        #TODO vectorize method
         data = getYearData(season, league)
         model = cls.getModel(season, league)
-        predictions = []
-        for i in data['Home']:
-            predictions.append(model.predict(i)[0])
-        data['pred-loss'] = [pred[0] for pred in predictions]
-        data['pred-draw'] = [pred[1] for pred in predictions]
-        data['pred-win'] = [pred[2] for pred in predictions]
-        brierScores = []
-        
-        for i in range(len(data)):
-            match = data.iloc[i]
-            result = match['result']
-            win = 0
-            draw = 0
-            loss = 0
-            if result == 1:
-                win = 1
-            elif result == 0:
-                draw = 1
-            elif result == -1:
-                loss = 1
-            score = 1/3 * (np.square(match['pred-win'] - win) +
-                        np.square(match['pred-draw'] - draw) +
-                        np.square(match['pred-loss'] - loss))
-            
-            brierScores.append(score)
-
-        return brierScores
+        predictions = [model.predict(i)[0] for i in data["Home"]]
+        # Careful, the model.predict should return in the order of loss, draw, win...
+        data[["pred-loss","pred-draw","pred-win"]] = predictions
+        return super()._calc_brier_scores(data)
 
     
     @classmethod

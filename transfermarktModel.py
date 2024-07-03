@@ -43,28 +43,7 @@ class TMModelOrderedProbit(BaseModel):
         data = getYearData(season, league)
         model = cls.getModel(season, league)
         data[["pred-loss","pred-draw","pred-win"]] = model.predict(data[['Home','Value']])
-        
-        brierScores = []
-        #TODO vectorize
-        for idx,pwin,pdraw,ploss,result in data.loc[:,["pred-win","pred-draw","pred-loss","result"]].itertuples():
-            win = 0
-            draw = 0
-            loss = 0
-            if result == 1:
-                win = 1
-            elif result == 0:
-                draw = 1
-            elif result == -1:
-                loss = 1
-            else:
-                raise RuntimeError("HELP")
-            score = 1/3 * (np.square(pwin - win) +
-                        np.square(pdraw - draw) +
-                        np.square(ploss - loss))
-            
-            brierScores.append(score)
-        
-        return brierScores
+        return super()._calc_brier_scores(data)
     
     @classmethod
     def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):
@@ -116,28 +95,7 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
         predictions = np.array([probitModel.predict(i)[0] for i in intPred])
 
         data[["pred-loss","pred-draw","pred-win"]] = predictions
-        
-        brierScores = []
-        #TODO vectorize
-        for idx,pwin,pdraw,ploss,result in data.loc[:,["pred-win","pred-draw","pred-loss","result"]].itertuples():
-            win = 0
-            draw = 0
-            loss = 0
-            if result == 1:
-                win = 1
-            elif result == 0:
-                draw = 1
-            elif result == -1:
-                loss = 1
-            else:
-                raise RuntimeError("HELP")
-            score = 1/3 * (np.square(pwin - win) +
-                        np.square(pdraw - draw) +
-                        np.square(ploss - loss))
-            
-            brierScores.append(score)
-
-        return brierScores
+        return super()._calc_brier_scores(data)
     
     @classmethod
     def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):

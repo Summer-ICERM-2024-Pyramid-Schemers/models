@@ -8,6 +8,8 @@ from functools import lru_cache
 def prepare_data(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
 
+    games_data = games_data.copy()
+
     games_data.loc[:,"goaldiff"] = games_data.loc[:,'fulltime_home_goals'] - games_data.loc[:,'fulltime_away_goals']
     games_data.loc[:,"Value"] = games_data.loc[:,'homeLogMV'] - games_data.loc[:,'awayLogMV']
     games_data.loc[:,"PurchaseValue"] = games_data.loc[:,'homeLogPV'] - games_data.loc[:,'awayLogPV']

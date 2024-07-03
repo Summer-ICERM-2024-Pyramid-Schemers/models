@@ -20,27 +20,8 @@ class BettingOddsModel(BaseModel):
             4 - League Two
         """
         finalTable = getYearData(season, league)
-        brierScores = []
-        for i in range(len(finalTable)):
-            match = finalTable.iloc[i]
-            result = match['result']
-            win = 0
-            draw = 0
-            loss = 0
-            if result == 1:
-                win = 1
-            elif result == 0:
-                draw = 1
-            elif result == -1:
-                loss = 1
-            score = 1/3 * (np.square(match['iOdds'] - win) +
-                        np.square(match['drawOdds'] - draw) +
-                        np.square(match['jOdds'] - loss))
-            
-            brierScores.append(score)
-
-        return brierScores
-    
+        return super()._calc_brier_scores(finalTable,["iOdds","drawOdds","jOdds"])
+        
     @classmethod
     def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):
         return super().plotBrierScores(seasons, *args, title='Betting Odds Brier Score by Season and League', filename="BOModel.png")

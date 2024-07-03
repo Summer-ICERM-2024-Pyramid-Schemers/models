@@ -7,6 +7,14 @@ DEFAULT_SEASONS = range(2010,2024)
 
 class BaseModel(ABC):
     @classmethod
+    def _calc_brier_scores(cls, data, win_draw_loss=["pred-win","pred-draw","pred-loss"]):
+        reality_arr = data["result"].to_numpy()[:,None] == np.arange(1,-2,-1)[None,:]
+        # ... while here we are using win, draw, loss
+        diff_arr = data[win_draw_loss].to_numpy() - reality_arr
+        brierScores = 1/3*np.sum(np.square(diff_arr),axis=1)
+        return brierScores
+
+    @classmethod
     @abstractmethod
     def getBrierScores(cls, season, league):
         """
