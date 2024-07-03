@@ -4,9 +4,9 @@ import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 
-from oddsModel import getOddsBrierScores
-from homeAdvModel import getHABrierScores
-from transfermarktModel import getTMBrierScores
+from oddsmodel import BettingOddsModel
+from homeAdvModel import HomeAdvModel
+from transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
 
 def compareModels(getM1BrierScores, getM2BrierScores):
     """
@@ -34,14 +34,17 @@ def compareModels(getM1BrierScores, getM2BrierScores):
         b1 = getM1BrierScores(season, 2)
         b2 = getM2BrierScores(season, 2)
         ttest = stats.ttest_rel(b1,b2)
+        ci = ttest.confidence_interval()
         Ch = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
         b1 = getM1BrierScores(season, 3)
         b2 = getM2BrierScores(season, 3)
         ttest = stats.ttest_rel(b1,b2)
+        ci = ttest.confidence_interval()
         l1 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
         b1 = getM1BrierScores(season, 4)
         b2 = getM2BrierScores(season, 4)
         ttest = stats.ttest_rel(b1,b2)
+        ci = ttest.confidence_interval()
         l2 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
         comparison = pd.concat([pd.DataFrame([[season, prem, Ch, l1, l2]], 
                                         columns=comparison.columns), comparison], 
@@ -55,7 +58,6 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
     pvalues = comparison.applymap(lambda x: x[1])
     lowerCI = comparison.applymap(lambda x: x[2])
     upperCI = comparison.applymap(lambda x: x[3])
-
     
     df_combined = diffs.stack().reset_index()
     df_combined.columns = ['Season', 'League', 'Brier_Diff']
@@ -64,16 +66,14 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
     # Calculate error bounds
     df_combined['lower_error'] = np.abs(df_combined['Brier_Diff'] - lowerCI.stack().values)
     df_combined['upper_error'] = np.abs(upperCI.stack().values - df_combined['Brier_Diff'])
-    print(df_combined)
     # Plot points
     sns.lineplot(data=df_combined, x='Season', y='Brier_Diff', hue='League', style='League')
-    
     # Add error bars
     for league in df_combined['League'].unique():
         league_data = df_combined[df_combined['League'] == league]
         plt.errorbar(league_data['Season'], league_data['Brier_Diff'],
                      yerr=[league_data['lower_error'], league_data['upper_error']],
-                     fmt='none', capsize=5, ecolor='gray', alpha=0.5)
+                     fmt='none', capsize=5, alpha=0.5, linestyle='--')
 
     # Customize the plot
     plt.axhline(y=0, color='r', linestyle='--')
@@ -87,8 +87,4 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
     plt.show()
 
 
-def getoddsm1(season, league):
-    return getTMBrierScores(season, league, 1)
-
-
-plotComparison(getOddsBrierScores, getoddsm1, "Odds", "Transfermarkt Model 1")
+plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Odds", "Transfermarkt Model 1")

@@ -2,8 +2,10 @@ import sqlite3
 import numpy as np
 import pandas as pd
 from functools import lru_cache
+import warnings
+from pandas.errors import SettingWithCopyWarning
+warnings.simplefilter(action='ignore', category=(SettingWithCopyWarning))
 
-#TODO get the warnings about .loc and views and copys to vanish
 
 def prepare_data(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
