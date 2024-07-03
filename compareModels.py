@@ -88,7 +88,7 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
 
 
 def getoddsm1(season, league):
-    getTMBrierScores(season, league, 1)
+    return getTMBrierScores(season, league, 1)
 
 
 plotComparison(getOddsBrierScores, getoddsm1, "Odds", "Transfermarkt Model 1")
