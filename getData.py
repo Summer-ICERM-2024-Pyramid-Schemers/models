@@ -1,8 +1,9 @@
 import sqlite3
 import numpy as np
-import os
 import pandas as pd
 from functools import lru_cache
+
+#TODO get the warnings about .loc and views and copys to vanish
 
 def prepare_data(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
@@ -18,7 +19,7 @@ def prepare_data(games_data: pd.DataFrame):
     games_data.loc[:,["iOdds","drawOdds","jOdds"]] = np.where(home_vec[:,None]==1,probsData,probsData[:,::-1])
 
     # TODO test .to_numpy
-    return (games_data.loc[:,['match_id','result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds']]).apply(pd.to_numeric)
+    return (games_data.loc[:,['result','goaldiff','Home','Value', 'PurchaseValue', 'iOdds', 'drawOdds', 'jOdds']]).apply(pd.to_numeric)
     
 def getYearData(season, league):
     """
@@ -58,38 +59,31 @@ def getData():
     Returns raw data for all matches of all leagues
     """
 
-    if os.path.exists("rawData.pkl"):
-        print("File read successfully.")
-        return pd.read_pickle("rawData.pkl")
-    else:
-        con = sqlite3.connect("english_football_data.sqlite")
+    con = sqlite3.connect("english_football_data.sqlite")
 
-        query = f"""
-        SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
-        market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
-        home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
-        home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
-        away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
-        away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
-        FROM Matches
-        JOIN LineupMarketvalues AS home
-        ON Matches.id = home.match_id 
-        AND Matches.home_team_id = home.team_id
-        JOIN LineupMarketvalues AS away
-        ON Matches.id = away.match_id
-        AND Matches.away_team_id = away.team_id
-        """
+    query = f"""
+    SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
+    market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
+    home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
+    home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
+    away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
+    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
+    FROM Matches
+    JOIN LineupMarketvalues AS home
+    ON Matches.id = home.match_id 
+    AND Matches.home_team_id = home.team_id
+    JOIN LineupMarketvalues AS away
+    ON Matches.id = away.match_id
+    AND Matches.away_team_id = away.team_id
+    """
 
-        Games = pd.read_sql_query(query, con)
-        Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
-        Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
-        Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
-        Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
+    Games = pd.read_sql_query(query, con)
+    Games['homeLogMV'] = np.log1p(Games['homeMarketVal'])
+    Games['awayLogMV'] = np.log1p(Games['awayMarketVal'])
+    Games['homeLogPV'] = np.log1p(Games['homePurchaseVal'])
+    Games['awayLogPV'] = np.log1p(Games['awayPurchaseVal'])
 
-        pd.to_pickle(Games, "rawData.pkl")
-        print("File pickled")
-
-        return Games
+    return Games
 
 
 def normOdds(iOdds, drawOdds, jOdds):
@@ -104,18 +98,3 @@ def normOddsVectorized(data):
     temp = 1/data
     juice = np.sum(temp,axis=1,keepdims=True)
     return temp/juice
-
-if __name__ == "__main__":
-    rawdata = getData()
-    
-    data1 = prepare_data(rawdata,False)
-    data2 = prepare_data(rawdata,False)
-    data3 = prepare_data(rawdata,True)
-
-    print(np.all(data1 == data2))
-    cond_arr = data1 == data3
-    print(np.all(cond_arr))
-    if not np.all(cond_arr):
-        print(np.nonzero(data1 - data3))
-
-    #print(data1,data2,data3,sep="\n")

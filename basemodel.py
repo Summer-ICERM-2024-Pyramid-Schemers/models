@@ -22,11 +22,15 @@ class BaseModel(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args, title, filename):
+    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args, title=None, filename=None):
         """
         Plots Brier scores from all leagues and seasons.
         """
 
+        if title is None:
+            title = f"{cls.__name__} Brier Score by Season and League"
+        if filename is None:
+            filename = f"{cls.__name__}_brier_scores.png"
         briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,5)] for season in seasons],
                             columns=['Premier League','Championship','League One','League Two'], index=seasons)
 
@@ -38,5 +42,5 @@ class BaseModel(ABC):
         plt.grid(True)
 
         plt.savefig(filename)
-        plt.show()
+        #plt.show()
     
