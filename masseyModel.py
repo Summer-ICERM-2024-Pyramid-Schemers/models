@@ -1,7 +1,6 @@
 from functools import cache
 from time import perf_counter
 
-import numpy as np
 import pandas as pd
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
@@ -91,7 +90,7 @@ class MasseyModel(BaseModel):
     
     @classmethod
     def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(seasons=seasons)
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 class WeightedMasseyModel(BaseModel):
@@ -179,7 +178,7 @@ class WeightedMasseyModel(BaseModel):
     
     @classmethod
     def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(seasons=seasons)
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 if __name__ == "__main__":

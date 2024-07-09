@@ -2,11 +2,14 @@ from time import perf_counter
 
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from baseModel import BaseModel, DEFAULT_SEASONS
+from baseModel import BaseModel
 from getData import getNonYearData, getYearData
 
 
 class HomeAdvModel(BaseModel):
+    _plot_title = "Home Advantage Brier Score by Season and League"
+    _plot_filename = "HAModel.png"
+
     @classmethod
     def getModel(cls, season, league):
         """
@@ -46,8 +49,8 @@ class HomeAdvModel(BaseModel):
 
     
     @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):
-        return super().plotBrierScores(seasons, *args, title='Home Advantage Brier Score by Season and League', filename="HAModel.png")
+    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 if __name__ == "__main__":

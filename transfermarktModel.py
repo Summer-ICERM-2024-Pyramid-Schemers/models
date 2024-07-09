@@ -46,6 +46,10 @@ class TMModelOrderedProbit(BaseModel):
         model = cls.getModel(season, league)
         data[["pred-loss","pred-draw","pred-win"]] = model.predict(data[['Home','Value']])
         return super()._calc_brier_scores(data)
+    
+    @classmethod
+    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 # An ordered probit model trained on an OLS goal difference model
@@ -97,6 +101,10 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_brier_scores(data)
+    
+    @classmethod
+    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 if __name__ == "__main__":

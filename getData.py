@@ -87,7 +87,6 @@ def _fetch_data_for_transfermarkt_model():
 
     return Games
 
-
 def normOdds(iOdds, drawOdds, jOdds):
     juice = 1/iOdds + 1/drawOdds + 1/jOdds
     iProb = 1/(iOdds*juice)
@@ -149,4 +148,3 @@ def fetch_data_for_massey_eos_eval():
     con.close()
 
     return Games, ranking, marketValues
-

@@ -54,5 +54,4 @@ class BaseModel(ABC):
         plt.grid(True)
 
         plt.savefig(filename)
-        #plt.show()
     
