@@ -3,7 +3,7 @@ import pandas as pd
 from scipy import stats
 
 
-class WeightedMassey:
+class WeightedMasseyEngine:
     """
     Calculates each team's Massey ratings with weighted match date and inclusion of homefield advantage
 

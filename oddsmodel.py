@@ -1,10 +1,13 @@
 from time import perf_counter
 
-from basemodel import BaseModel, DEFAULT_SEASONS
+from baseModel import BaseModel
 from getData import getYearData
 
 
 class BettingOddsModel(BaseModel):
+    _plot_title = 'Betting Odds Brier Score by Season and League'
+    _plot_filename = "BOModel.png"
+
     @classmethod
     def getBrierScores(cls, season, league):
         """
@@ -19,10 +22,6 @@ class BettingOddsModel(BaseModel):
         """
         finalTable = getYearData(season, league)
         return super()._calc_brier_scores(finalTable,["iOdds","drawOdds","jOdds"])
-        
-    @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):
-        return super().plotBrierScores(seasons, *args, title='Betting Odds Brier Score by Season and League', filename="BOModel.png")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,9 @@ import pandas as pd
 DEFAULT_SEASONS = range(2010,2024)
 
 class BaseModel(ABC):
+    _plot_title = None
+    _plot_filename = None
+
     @classmethod
     def _calc_brier_scores(cls, data, win_draw_loss=["pred-win","pred-draw","pred-loss"]):
         reality_arr = data["result"].to_numpy()[:,None] == np.arange(1,-2,-1)[None,:]
@@ -37,9 +40,9 @@ class BaseModel(ABC):
         """
 
         if title is None:
-            title = f"{cls.__name__} Brier Score by Season and League"
+            title = cls._plot_title or f"{cls.__name__} Brier Score by Season and League"
         if filename is None:
-            filename = f"{cls.__name__}_brier_scores.png"
+            filename = cls._plot_filename or f"{cls.__name__}_brier_scores.png"
         briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,5)] for season in seasons],
                             columns=['Premier League','Championship','League One','League Two'], index=seasons)
 

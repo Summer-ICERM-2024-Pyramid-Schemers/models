@@ -2,7 +2,7 @@ from time import perf_counter
 
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from basemodel import BaseModel, DEFAULT_SEASONS
+from baseModel import BaseModel, DEFAULT_SEASONS
 from getData import getNonYearData, getYearData
 
 
