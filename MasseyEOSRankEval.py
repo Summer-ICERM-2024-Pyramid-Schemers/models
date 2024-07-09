@@ -38,6 +38,9 @@ def ranking_eval(season):
     avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']] # TBD: season or season-1
 
     #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
+    avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']] # TBD: season or season-1
+
+    #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
 
     m_ratings = MasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
                     goals_away=pre_Matches['fulltime_away_goals'], 
@@ -61,7 +64,7 @@ def ranking_eval(season):
     
     return m_eval, wm_eval
 
-def evaluation (ratings, EEOSR):
+def evaluation(ratings, EEOSR):
     '''
     Input
     ---------
