@@ -4,7 +4,7 @@ import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 
-from oddsmodel import BettingOddsModel
+from oddsModel import BettingOddsModel
 from homeAdvModel import HomeAdvModel
 from transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
 
@@ -21,7 +21,7 @@ def compareModels(getM1BrierScores, getM2BrierScores):
     [3] - An upper 95% confidence interval bound for Brier score difference
     """
     comparison = pd.DataFrame(columns=['Year', 'Premier League','Championship','League One','League Two'])
-    for season in range(2010, 2024, 1):
+    for season in range(2012, 2024, 1):
         # For each league, calculate raw difference M1-M2 Brier score
         # Then calculate p value from t test
         # Then add lower and upper CIs
@@ -81,10 +81,7 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
     plt.xlabel('Season')
     plt.ylabel('Difference in Brier Score')
     plt.legend(title='League')
-    plt.savefig("OddsvsTMmodel1")
-    
-    # Display the plot
-    plt.show()
+    plt.savefig(M1Title + " - " + M2Title)
 
 def compareModelsAggregate(getM1BrierScores, getM2BrierScores):
     """
@@ -107,7 +104,7 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores):
     l2m2 = []
     l3m2 = []
     l4m2 = []
-    for season in range(2010, 2024, 1):
+    for season in range(2012, 2024, 1):
         # For each league, calculate raw difference M1-M2 Brier score
         # Then calculate p value from t test
         # Then add lower and upper CIs
@@ -175,9 +172,24 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
     plt.title(f'Comparison of Brier Scores: {M1Title} - {M2Title}')
     plt.xlabel('League')
     plt.ylabel('Difference in Brier Score')
-    plt.savefig("OddsvsTMmodel1")
-    
-    # Display the plot
-    plt.show()
+    plt.savefig(M1Title + " - " + M2Title + " AGG")
 
+# Odds - HA
+plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
+plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
+
+# Odds - TM1
+plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
+plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
+
+# Odds - TM2
+plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
+plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
+
+# TM1 - TM2
+plotComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
+plotAggregateComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
+
+# TM2 - HA
+plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
 plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
