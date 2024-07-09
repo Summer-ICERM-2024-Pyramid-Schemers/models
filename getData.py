@@ -40,9 +40,9 @@ def getYearData(season, league):
 
 def getNonYearData(season, league):
     """
-    Returns a dataframe containing matches from every season of a given league excluding the specified season.
+    Returns a dataframe containing matches from every season of a given league prior to the specified season.
     
-    season - A year between 2010 and 2023 (inclusive)
+    season - A year between 2012 and 2023 (inclusive)
     league - An integer between 1 and 4 (inclusive)
         1 - Premier League
         2 - Championship
@@ -51,7 +51,7 @@ def getNonYearData(season, league):
     """
 
     data = getData()
-    Games = data.query(f'season != {season} and league_id == {league}')
+    Games = data.query(f'season < {season} and league_id == {league}')
     return prepare_data(Games)
 
 @lru_cache(1)
@@ -68,7 +68,9 @@ def getData():
     home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
     home.starters_total_market_val + home.bench_total_market_val AS homeMarketVal,
     away.starters_purchase_val + away.bench_purchase_val AS awayPurchaseVal,
-    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal
+    away.starters_total_market_val + away.bench_total_market_val AS awayMarketVal,
+    ((home.starters_avg_age * 11) + (home.bench_avg_age * home.bench_size)) / (11 + home.bench_size) AS homeAge,
+    ((away.starters_avg_age * 11) + (away.bench_avg_age * away.bench_size)) / (11 + away.bench_size) AS awayAge
     FROM Matches
     JOIN LineupMarketvalues AS home
     ON Matches.id = home.match_id 
