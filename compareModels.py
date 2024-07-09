@@ -4,7 +4,7 @@ import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 
-from oddsmodel import BettingOddsModel
+from oddsModel import BettingOddsModel
 from homeAdvModel import HomeAdvModel
 from transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
 

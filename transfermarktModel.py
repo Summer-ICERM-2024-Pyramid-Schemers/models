@@ -3,12 +3,15 @@ from time import perf_counter
 import statsmodels.formula.api as smf
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from basemodel import DEFAULT_SEASONS, BaseModel
+from baseModel import BaseModel
 from getData import getNonYearData, getYearData
 
 
 # An ordered probit model
 class TMModelOrderedProbit(BaseModel):
+    _plot_title = "Transfer Market Brier Score by Season and League"
+    _plot_filename = "TMModel1.png"
+
     @classmethod
     def getModel(cls, season, league):
         """
@@ -45,12 +48,15 @@ class TMModelOrderedProbit(BaseModel):
         return super()._calc_brier_scores(data)
     
     @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):
-        return super().plotBrierScores(seasons, *args, title="Transfer Market Brier Score by Season and League", filename="TMModel1.png")
+    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 # An ordered probit model trained on an OLS goal difference model
 class TMModelOrderedProbitOLSGoalDiff(BaseModel):
+    _plot_title = "Transfer Market Brier Score by Season and League"
+    _plot_filename = "TMModel2.png"
+
     @classmethod
     def getModel(cls, season, league):    
         """
@@ -97,8 +103,8 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
         return super()._calc_brier_scores(data)
     
     @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args):
-        return super().plotBrierScores(seasons, *args, title="Transfer Market Brier Score by Season and League", filename="TMModel2.png")
+    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
 
 
 if __name__ == "__main__":
