@@ -3,18 +3,70 @@ from massey import Massey
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
+import sqlite3
 
 
-def ranking_eval (eval_year, match_data, supp_data):
+""" 
+This is used to compare the end of season ranking prediction by league made with Massey and Weighted Massey, using metrics
+    1) MAE (mean absolute error)
+    2) Spearman's rank correlation coefficient
+
+TO USE THIS:
+
+from MasseyEOSRankEval import ranking_eval
+
+ranking_eval(2013)
+"""
+
+
+def prepareData():
+    # substitute with directory of your dataset
+    con = sqlite3.connect('/Users/yutong.bu/Desktop/ICERM/sports analytics/data/english_football_data.sqlite')
+
+    gamesQuery = f"""
+    SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result
+    FROM Matches
+    """
+
+    rankQuery = f"""
+    SELECT season, league_id, team_id, ranking	
+    FROM EOSStandings
+    """
+
+    mvQuery = f"""
+    SELECT season, league_id, team_id, avg_market_val
+    FROM TeamMarketvalues
+    """
+
+    Games = pd.read_sql_query(gamesQuery, con)
+    ranking = pd.read_sql_query(rankQuery, con)
+    marketValues = pd.read_sql_query(mvQuery, con)
+    con.close()
+
+    return Games, ranking, marketValues
+
+def ranking_eval(season):
     '''
-    Compute the Massey and Weighted Massey ratings based on matches data before `eval_year`,
-    then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
-    '''
-    EEOSR = supp_data.loc[supp_data['season']==eval_year, 
-                             ['league_id', 'team_id', 'ranking'] ]
-    pre_Matches = match_data.loc[match_data['season'] < eval_year,]
+    Compute the Massey and Weighted Massey ratings based on matches data before predict season, then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
 
-    avg_mv = supp_data.loc[(supp_data['season'] == eval_year), ['team_id', 'avg_market_val']] # TBD: eval_year or eval_year-1
+    Input
+    --------
+        season: year of which the end of season ranking is to predict and compare
+
+    Output
+    --------
+        m_eval: a dataframe containing 1)MAE 2)Spearman evaluation result for the end of season ranking predictions by league using Massey method  
+        wm_eval: a dataframe containing 1)MAE 2)Spearman evaluation result for the end of season ranking predictions by league using Weighted Massey method  
+
+    '''
+
+    Games, ranking, marketValues = prepareData()
+
+    EEOSR = ranking.loc[ranking['season']==season, ]
+    pre_Matches = Games.loc[Games['season'] < season,]
+
+    avg_mv = marketValues.loc[(marketValues['season'] == season), 
+                              ['season', 'team_id', 'avg_market_val']] # TBD: season or season-1
 
     massey = Massey(goals_home=pre_Matches['fulltime_home_goals'], 
                     goals_away=pre_Matches['fulltime_away_goals'], 
