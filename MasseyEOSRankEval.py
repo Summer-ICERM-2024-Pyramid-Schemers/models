@@ -10,11 +10,10 @@ def ranking_eval (eval_year, match_data, supp_data):
     Compute the Massey and Weighted Massey ratings based on matches data before `eval_year`,
     then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
     '''
-    EEOSR = supp_data.loc[supp_data['season']==eval_year, 
-                             ['league_id', 'team_id', 'ranking'] ]
-    pre_Matches = match_data.loc[match_data['season'] < eval_year,]
+    EEOSR = supp_data.loc[supp_data['season']==eval_year,['league_id', 'team_id', 'ranking']]
+    pre_Matches = match_data.loc[match_data['season'] < eval_year,:]
 
-    avg_mv = supp_data.loc[(supp_data['season'] == eval_year), ['team_id', 'avg_market_val']] # TBD: eval_year or eval_year-1
+    avg_mv = supp_data.loc[(supp_data['season'] == eval_year),['team_id', 'avg_market_val']] # TBD: eval_year or eval_year-1
 
     massey = Massey(goals_home=pre_Matches['fulltime_home_goals'], 
                     goals_away=pre_Matches['fulltime_away_goals'], 

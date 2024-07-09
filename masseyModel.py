@@ -1,10 +1,10 @@
+from functools import cache
+from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from time import perf_counter
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from functools import cache
 from baseModel import BaseModel
 from getData import fetch_data_for_massey_model
 from massey_engine import MasseyEngine
@@ -114,13 +114,9 @@ class WeightedMasseyModel(BaseModel):
         avg_mv = marketValues.loc[marketValues['season'] == season, :]
     
         # get WEIGHTED massey ratings using data before predict season
-        wtd_massey = WeightedMasseyEngine(goals_home=pre_Games['fulltime_home_goals'], 
-                                    goals_away=pre_Games['fulltime_away_goals'], 
-                                    teams_home=pre_Games['home_team_id'],
-                                    teams_away=pre_Games['away_team_id'],
-                                    match_date=pre_Games['date'],
-                                    avg_mv=avg_mv)
-        wm_ratings, wm_home_advantage = wtd_massey.get_ratings()
+        wm_ratings, wm_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Games['fulltime_home_goals'], 
+                                    goals_away=pre_Games['fulltime_away_goals'], teams_home=pre_Games['home_team_id'],
+                                    teams_away=pre_Games['away_team_id'], match_date=pre_Games['date'], avg_mv=avg_mv)
 
         # if uses massey rating in combination with market value
         wm_ratings = wm_ratings.drop(columns=['rating'])
@@ -133,7 +129,7 @@ class WeightedMasseyModel(BaseModel):
                                             'rating': 'home_rating'})
         away_rating = ratings.rename(columns={'team': 'away_team_id', 
                                             'rating': 'away_rating'})
-        Year_Games = Games.loc[Games['season']==season, ]
+        Year_Games = Games.loc[Games['season']==season, :]
         Year_Games = pd.merge(Year_Games, home_rating, on=['home_team_id', 'season'], how='left')
         Year_Games = pd.merge(Year_Games, away_rating, on=['away_team_id', 'season'], how='left')
         Year_Games = Year_Games.dropna()
@@ -160,13 +156,9 @@ class WeightedMasseyModel(BaseModel):
             - predicted probability of win, draw, loss of each game in predict season 
         """
 
-        frames = []
         # change 2011 to (earliest season + 1) if dataset is updated
-        for Year in range(2011, season):
-            Year_Games = cls.getModel(Year, None)
-            frames.append(Year_Games)
         # Concatenate all collected DataFrames into a single DataFrame
-        pre_data = pd.concat(frames, ignore_index=True)
+        pre_data = pd.concat([cls.getModel(Year, None) for Year in range(2011, season)], ignore_index=True)
 
         model = OrderedModel(pre_data['result'],pre_data['rating_diff'],distr = 'probit')
         model = model.fit(method='bfgs')
@@ -193,6 +185,6 @@ class WeightedMasseyModel(BaseModel):
 if __name__ == "__main__":
     start = perf_counter()
     MasseyModel.plotBrierScores()
-    #WeightedMasseyModel.plotBrierScores()
+    WeightedMasseyModel.plotBrierScores()
     end = perf_counter()
     print(end-start)
