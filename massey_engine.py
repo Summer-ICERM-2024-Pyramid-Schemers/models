@@ -25,8 +25,8 @@ class MasseyEngine:
     @classmethod
     def _solve_ratings(cls, fixtures, teams):
         N = len(teams)
-        M = np.zeros((N+1, N))
-        p = np.zeros(N+1)
+        M = np.zeros((N, N))
+        p = np.zeros(N)
         team_to_matrix_idx = {t:i for i,t in enumerate(teams)}
 
         for goals_home,goals_away,team_home,team_away in fixtures.itertuples(False):
@@ -39,8 +39,7 @@ class MasseyEngine:
             p[a] -= goal_diff
 
         d_idxs = np.arange(N)
-        M[d_idxs,d_idxs] = np.abs(np.sum(M,axis=1))[:-1]
-        M[N,:] = 1
+        M[d_idxs,d_idxs] = np.abs(np.sum(M,axis=1))
 
         ratings = np.linalg.lstsq(M, p, rcond=None)[0]
         return ratings

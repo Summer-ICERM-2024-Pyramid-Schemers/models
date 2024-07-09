@@ -1,48 +1,65 @@
-from weightedMassey import WeightedMassey
-from massey import Massey
+from time import perf_counter
+
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
+from getData import fetch_data_for_massey_eos_eval
+from massey_engine import MasseyEngine
+from weighted_massey_engine import WeightedMasseyEngine
 
-def ranking_eval (eval_year, match_data, supp_data):
+
+""" 
+This is used to compare the end of season ranking prediction by league made with Massey and Weighted Massey, using metrics
+    1) MAE (mean absolute error)
+    2) Spearman's rank correlation coefficient
+"""
+
+
+def ranking_eval(season):
     '''
-    Compute the Massey and Weighted Massey ratings based on matches data before `eval_year`,
-    then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
+    Compute the Massey and Weighted Massey ratings based on matches data before predict season, then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
+
+    Input
+    --------
+        season: year of which the end of season ranking is to predict and compare
+
+    Output
+    --------
+        m_eval: a dataframe containing 1)MAE 2)Spearman evaluation result for the end of season ranking predictions by league using Massey method  
+        wm_eval: a dataframe containing 1)MAE 2)Spearman evaluation result for the end of season ranking predictions by league using Weighted Massey method  
+
     '''
-    EEOSR = supp_data.loc[supp_data['season']==eval_year,['league_id', 'team_id', 'ranking']]
-    pre_Matches = match_data.loc[match_data['season'] < eval_year,:]
+    Games, ranking, marketValues = fetch_data_for_massey_eos_eval()
 
-    avg_mv = supp_data.loc[(supp_data['season'] == eval_year),['team_id', 'avg_market_val']] # TBD: eval_year or eval_year-1
+    EEOSR = ranking.loc[ranking['season']==season, :]
+    pre_Matches = Games.loc[Games['season'] < season, :]
 
-    massey = Massey(goals_home=pre_Matches['fulltime_home_goals'], 
+    avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']] # TBD: season or season-1
+
+    #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
+
+    m_ratings = MasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
                     goals_away=pre_Matches['fulltime_away_goals'], 
                     teams_home=pre_Matches['home_team_id'],
                     teams_away=pre_Matches['away_team_id'])
-    m_ratings = massey.get_ratings()
 
     m_eval = evaluation(m_ratings, EEOSR)
 
-    wtd_massey = WeightedMassey(goals_home=pre_Matches['fulltime_home_goals'], 
+    wm_ratings, wm_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
                                 goals_away=pre_Matches['fulltime_away_goals'], 
                                 teams_home=pre_Matches['home_team_id'],
                                 teams_away=pre_Matches['away_team_id'],
                                 match_date=pre_Matches['date'],
                                 avg_mv=avg_mv)
-    wm_ratings, wm_home_advantage = wtd_massey.get_ratings()
 
     # if uses massey rating in combination with market value
     wm_ratings = wm_ratings.drop(columns=['rating'])
     wm_ratings = wm_ratings.rename(columns={'mv_rating':'rating'})
-    
 
     wm_eval = evaluation(wm_ratings, EEOSR)
     
-
-    
     return m_eval, wm_eval
-
-
 
 def evaluation (ratings, EEOSR):
     '''
@@ -86,3 +103,9 @@ def evaluation (ratings, EEOSR):
         eval.loc[league_id-1,'MAE'] = mae
         eval.loc[league_id-1,'Spearman'] = spearman_corr
     return eval
+
+
+if __name__ == "__main__":
+    start = perf_counter()
+    print(*ranking_eval(2013),sep='\n')
+    print(perf_counter()-start)

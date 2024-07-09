@@ -4,6 +4,7 @@ import sqlite3
 import numpy as np
 import pandas as pd
 
+DATABASE_FILEPATH = "english_football_data.sqlite"
 
 def _prepare_data_for_transfermarkt_model(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
@@ -58,7 +59,7 @@ def _fetch_data_for_transfermarkt_model():
     Returns raw data for all matches of all leagues
     """
 
-    con = sqlite3.connect("english_football_data.sqlite")
+    con = sqlite3.connect(DATABASE_FILEPATH)
 
     query = f"""
     SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
@@ -98,9 +99,10 @@ def norm_odds_vectorized(data):
     juice = np.sum(temp,axis=1,keepdims=True)
     return temp/juice
 
+#TODO remove and replace
 @lru_cache(1)
 def fetch_data_for_massey_model():
-    con = sqlite3.connect('english_football_data.sqlite')
+    con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = f"""
     SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
@@ -119,3 +121,30 @@ def fetch_data_for_massey_model():
     Games['result'] = np.sign(Games["fulltime_home_goals"] - Games["fulltime_away_goals"]).astype(int)
 
     return Games, marketValues
+
+@lru_cache(1)
+def fetch_data_for_massey_eos_eval():
+    con = sqlite3.connect(DATABASE_FILEPATH)
+
+    gamesQuery = f"""
+    SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result
+    FROM Matches
+    """
+
+    rankQuery = f"""
+    SELECT season, league_id, team_id, ranking	
+    FROM EOSStandings
+    """
+
+    mvQuery = f"""
+    SELECT season, league_id, team_id, avg_market_val
+    FROM TeamMarketvalues
+    """
+
+    Games = pd.read_sql_query(gamesQuery, con)
+    ranking = pd.read_sql_query(rankQuery, con)
+    marketValues = pd.read_sql_query(mvQuery, con)
+    con.close()
+
+    return Games, ranking, marketValues
+
