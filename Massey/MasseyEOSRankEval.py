@@ -65,8 +65,9 @@ def ranking_eval(season):
     EEOSR = ranking.loc[ranking['season']==season, ]
     pre_Matches = Games.loc[Games['season'] < season,]
 
-    avg_mv = marketValues.loc[(marketValues['season'] == season), 
-                              ['season', 'team_id', 'avg_market_val']] # TBD: season or season-1
+    avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']] # TBD: season or season-1
+
+    #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
 
     massey = Massey(goals_home=pre_Matches['fulltime_home_goals'], 
                     goals_away=pre_Matches['fulltime_away_goals'], 
