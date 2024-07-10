@@ -155,6 +155,7 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores, excludel2 = False
 
 def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, excludel2 = False):
     comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores, excludel2)
+    print(comparison)
     diffs = comparison.applymap(lambda x: x[0])
     pvalues = comparison.applymap(lambda x: x[1])
     lowerCI = comparison.applymap(lambda x: x[2])
@@ -186,6 +187,67 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
 
     plt.show()
 
+def compareSRAggregate(getM1SuccessRatio, getM2SuccessRatio, excludel2 = False):
+    """
+    Returns a data frame with a column for each league, with a list containing aggregate data
+
+    Inputs should be functions that return a list of Brier scores for a given season and league
+    
+    Elements of list:
+    [0] - The difference in mean Brier scores of M1 - M2
+    [1] - The 2-sided p-value of a paired t-test for difference in means
+    [2] - A lower 95% confidence interval bound for Brier score difference
+    [3] - An upper 95% confidence interval bound for Brier score difference
+    """
+    comparison = pd.DataFrame(columns=['Premier League','Championship','League One','League Two'])
+
+    l1m1, l1m2, l2m1, l2m2, l3m1, l3m2, l4m1, l4m2 = 0,0,0,0,0,0,0,0
+    for season in range(2012, 2024, 1):
+        div = season - 2011
+        mult = season - 2012
+        # Each proportion is of the same number of games...
+        l1m1 = (getM1SuccessRatio(season, 1) + (l1m1 * mult)) / div
+        l1m2 = (getM2SuccessRatio(season, 1) + (l1m2 * mult)) / div
+        l2m1 = (getM1SuccessRatio(season, 2) + (l2m1 * mult)) / div
+        l2m2 = (getM2SuccessRatio(season, 2) + (l2m2 * mult)) / div
+        l3m1 = (getM1SuccessRatio(season, 3) + (l3m1 * mult)) / div
+        l3m2 = (getM2SuccessRatio(season, 3) + (l3m2 * mult)) / div
+        l4m1 = (getM1SuccessRatio(season, 4) + (l4m1 * mult)) / div
+        l4m2 = (getM2SuccessRatio(season, 4) + (l4m2 * mult)) / div
+    
+    prem = l1m1 - l1m2
+    Ch = l2m1 - l2m2
+    l1 = l3m1 - l3m2
+    if excludel2 == False:
+        l2 = l4m1 - l4m2
+    elif excludel2 == True:
+        l2 = 0
+
+    comparison = pd.concat([pd.DataFrame([[prem, Ch, l1, l2]], 
+                                        columns=comparison.columns), comparison], 
+                                        ignore_index=True)
+    return comparison
+
+def plotSRAggregateComparison(getM1SuccessRatio, getM2SuccessRatio, M1Title, M2Title, excludel2 = False):
+    diffs = compareSRAggregate(getM1SuccessRatio, getM2SuccessRatio, excludel2)
+    print(diffs)
+    
+    df_combined = diffs.stack().reset_index()
+    df_combined = df_combined.drop('level_0', axis=1)
+    df_combined.columns = ['League', 'SR_Diff']
+
+    # Plot points
+    sns.barplot(data=df_combined, x='League', y='SR_Diff', color = 'blue')
+
+    # Customize the plot
+    plt.axhline(y=0, color='r', linestyle='--')
+    plt.title(f'Comparison of Success Ratios: {M1Title} - {M2Title}')
+    plt.xlabel('League')
+    plt.ylabel('Difference in Success Ratios')
+    plt.savefig(M1Title + " - " + M2Title + " AGG")
+
+    plt.show()
+
 # Odds - HA
 #plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
 #plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
@@ -205,3 +267,5 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
 # TM2 - HA
 #plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
 #plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
+
+plotSRAggregateComparison(BettingOddsModel.getSuccessRatio, TMModelOrderedProbit.getSuccessRatio, "Betting Odds", "Transfermarkt Model 1")
