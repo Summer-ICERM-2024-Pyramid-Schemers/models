@@ -97,6 +97,8 @@ def evaluation(ratings, EEOSR):
         league_massey['massey_ranking'] = league_massey['rating'].rank(ascending=False, method='min').astype(int)
 
         compare = league_massey.merge(league_EEOSR, on='team_id')
+        # remove NA teams from true ranking as well
+        compare['ranking'] = compare['ranking'].rank(ascending=True, method='min').astype(int)
         compare = compare.rename(columns={'ranking': 'true_ranking'})
 
         mae = np.mean(np.abs(compare['massey_ranking'] - compare['true_ranking']))
