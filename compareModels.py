@@ -7,8 +7,9 @@ import seaborn as sns
 from oddsModel import BettingOddsModel
 from homeAdvModel import HomeAdvModel
 from transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
+from masseyModel import MasseyModel, WeightedMasseyModel
 
-def compareModels(getM1BrierScores, getM2BrierScores):
+def compareModels(getM1BrierScores, getM2BrierScores, excludel2 = False):
     """
     Returns a dataframe containing a list for each league and season.
 
@@ -41,18 +42,21 @@ def compareModels(getM1BrierScores, getM2BrierScores):
         ttest = stats.ttest_rel(b1,b2)
         ci = ttest.confidence_interval()
         l1 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
-        b1 = getM1BrierScores(season, 4)
-        b2 = getM2BrierScores(season, 4)
-        ttest = stats.ttest_rel(b1,b2)
-        ci = ttest.confidence_interval()
-        l2 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
+        if excludel2 == False:
+            b1 = getM1BrierScores(season, 4)
+            b2 = getM2BrierScores(season, 4)
+            ttest = stats.ttest_rel(b1,b2)
+            ci = ttest.confidence_interval()
+            l2 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
+        elif excludel2 == True:
+            l2 = [0,0,0,0]
         comparison = pd.concat([pd.DataFrame([[season, prem, Ch, l1, l2]], 
                                         columns=comparison.columns), comparison], 
                                         ignore_index=True)
     return comparison
 
-def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
-    comparison = compareModels(getM1BrierScores, getM2BrierScores)
+def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, excludel2 = False):
+    comparison = compareModels(getM1BrierScores, getM2BrierScores, excludel2)
     comparison = comparison.set_index("Year")
     diffs = comparison.applymap(lambda x: x[0])
     pvalues = comparison.applymap(lambda x: x[1])
@@ -83,7 +87,9 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
     plt.legend(title='League')
     plt.savefig(M1Title + " - " + M2Title)
 
-def compareModelsAggregate(getM1BrierScores, getM2BrierScores):
+    plt.show()
+
+def compareModelsAggregate(getM1BrierScores, getM2BrierScores, excludel2 = False):
     """
     Returns a data frame with a column for each league, with a list containing aggregate data
 
@@ -118,8 +124,9 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores):
         l3m1.extend(getM1BrierScores(season, 3))
         l3m2.extend(getM2BrierScores(season, 3))
 
-        l4m1.extend(getM1BrierScores(season, 4))
-        l4m2.extend(getM2BrierScores(season, 4))
+        if excludel2 == False:
+            l4m1.extend(getM1BrierScores(season, 4))
+            l4m2.extend(getM2BrierScores(season, 4))
 
     ttest = stats.ttest_rel(l1m1, l1m2)
     ci = ttest.confidence_interval()
@@ -133,9 +140,12 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores):
     ci = ttest.confidence_interval()
     l1 = [np.mean(l3m1) - np.mean(l3m2), ttest[1], ci[0], ci[1]]
 
-    ttest = stats.ttest_rel(l4m1, l4m2)
-    ci = ttest.confidence_interval()
-    l2 = [np.mean(l4m1) - np.mean(l4m2), ttest[1], ci[0], ci[1]]
+    if excludel2 == False:
+        ttest = stats.ttest_rel(l4m1, l4m2)
+        ci = ttest.confidence_interval()
+        l2 = [np.mean(l4m1) - np.mean(l4m2), ttest[1], ci[0], ci[1]]
+    elif excludel2 == True:
+        l2 = [0,0,0,0]
 
     comparison = pd.concat([pd.DataFrame([[prem, Ch, l1, l2]], 
                                         columns=comparison.columns), comparison], 
@@ -143,8 +153,8 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores):
     return comparison
 
 
-def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title):
-    comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores)
+def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, excludel2 = False):
+    comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores, excludel2)
     diffs = comparison.applymap(lambda x: x[0])
     pvalues = comparison.applymap(lambda x: x[1])
     lowerCI = comparison.applymap(lambda x: x[2])
@@ -173,6 +183,8 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
     plt.xlabel('League')
     plt.ylabel('Difference in Brier Score')
     plt.savefig(M1Title + " - " + M2Title + " AGG")
+
+    plt.show()
 
 # Odds - HA
 #plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
