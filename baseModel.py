@@ -17,6 +17,20 @@ class BaseModel(ABC):
         diff_arr = data[win_draw_loss].to_numpy() - reality_arr
         brierScores = 1/3*np.sum(np.square(diff_arr),axis=1)
         return brierScores
+    
+    @classmethod
+    def _calc_success_ratio(cls, data, win_draw_loss=["pred-win","pred-draw","pred-loss"]):
+        reality_arr = data["result"].to_numpy()[:,None] == np.arange(1,-2,-1)[None,:]
+        preds = data[win_draw_loss].to_numpy()
+
+        max_indices = np.argmax(preds, axis=1)
+        result = np.zeros_like(preds)
+        result[np.arange(preds.shape[0]), max_indices] = 1
+
+        equal_rows = np.all(result == reality_arr, axis=1)
+        
+        return np.mean(equal_rows)
+
 
     @classmethod
     @abstractmethod

@@ -46,6 +46,25 @@ class HomeAdvModel(BaseModel):
         # Careful, the model.predict should return in the order of loss, draw, win...
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_brier_scores(data)
+    
+    @classmethod
+    def getSuccessRatio(cls, season, league):
+        """
+        Returns the success ratio for a given season in a given league
+        
+        season - A year between 2010 and 2023 (inclusive)
+        league - An integer between 1 and 4 (inclusive)
+            1 - Premier League
+            2 - Championship
+            3 - League One
+            4 - League Two
+        """
+        data = getYearData(season, league)
+        model = cls.getModel(season, league)
+        predictions = [model.predict(i)[0] for i in data["Home"]]
+        # Careful, the model.predict should return in the order of loss, draw, win...
+        data[["pred-loss","pred-draw","pred-win"]] = predictions
+        return super()._calc_success_ratio(data)
 
     
     @classmethod
@@ -55,6 +74,6 @@ class HomeAdvModel(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    HomeAdvModel.plotBrierScores()
+    HomeAdvModel.getSuccessRatio(2023, 4)
     end = perf_counter()
     print(end-start)

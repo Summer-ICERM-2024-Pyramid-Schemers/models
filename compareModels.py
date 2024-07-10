@@ -175,21 +175,21 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
     plt.savefig(M1Title + " - " + M2Title + " AGG")
 
 # Odds - HA
-plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
-plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
+#plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage")
 
 # Odds - TM1
-plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
-plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
+#plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
 
 # Odds - TM2
-plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
-plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
+#plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
 
 # TM1 - TM2
-plotComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
-plotAggregateComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
+#plotComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
+#plotAggregateComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
 
 # TM2 - HA
-plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
-plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
+#plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
+#plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
