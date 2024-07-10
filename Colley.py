@@ -1,7 +1,5 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import sqlite3
 
 class Colley:
     """
@@ -123,8 +121,8 @@ def _build_C_b(fixtures, teams, include_draws, draw_weight):
 
         else:
             if include_draws:
-                b[h] += draw_weight
-                b[a] += draw_weight
+                b[h] += draw_weight * row["game_weight"]
+                b[a] += draw_weight * row["game_weight"]
 
     np.fill_diagonal(C, np.abs(C.sum(axis=1)) + 2)
     b = 1 + b * 0.5
@@ -132,27 +130,5 @@ def _build_C_b(fixtures, teams, include_draws, draw_weight):
     return C, b
 
 
-con = sqlite3.connect("english_football_data.sqlite")
 
-gamesQuery = f"""
-SELECT home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, date
-FROM Matches
-WHERE season != {2023}
-AND league_id = {1}
-"""
-
-Games = pd.read_sql_query(gamesQuery, con)
-
-home_goals_list = Games["fulltime_home_goals"]
-away_goals_list = Games["fulltime_away_goals"]
-home_teams_list = Games['home_team_id']
-away_teams_list = Games['away_team_id']
-match_dates_list = Games['date']
-
-colley = Colley(home_goals_list,away_goals_list,home_teams_list, away_teams_list,match_dates_list)
-
-colley_ratings = colley.get_ratings()
-
-
-print(colley_ratings)
 
