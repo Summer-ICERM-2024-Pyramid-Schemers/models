@@ -125,21 +125,9 @@ def get_colley(season,league):
     WHERE season = {season}
     AND league_id = {league}
     """
-    teamsQuery = f"""
-    SELECT id, name
-    FROM Teams
-    """
-
-
+    
     Games = pd.read_sql_query(gamesQuery, con)
-    Names = pd.read_sql_query(teamsQuery, con)
-    merged_df = pd.merge(Games, Names, left_on='home_team_id', right_on='id', how='left')
-    merged_df = merged_df.rename(columns={'name': 'home_team_name'})
-    new_df = merged_df.drop(columns=['id'])
-    final_df = pd.merge(new_df, Names, left_on='away_team_id', right_on='id', how='left')
-    final_df = final_df.rename(columns={'name': 'away_team_name'})
-    final_df = final_df.rename(columns={'name': 'away_team_name'})
-    Games = final_df.drop(columns=['id'])
+
 
     home_goals_list = Games["fulltime_home_goals"].tolist()
     away_goals_list = Games["fulltime_away_goals"].tolist()

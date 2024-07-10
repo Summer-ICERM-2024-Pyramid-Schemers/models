@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 # load functions
-from Weighted_Colley import Colley
+from Colley import Colley
 
 # seasons to plot (starting season has to be >= (earliest season+2))
 DEFAULT_SEASONS = range(2012,2024)
@@ -54,7 +54,7 @@ def getData(season, league):
                                 goals_away=pre_Games['fulltime_away_goals'], 
                                 teams_home=pre_Games['home_team_id'],
                                 teams_away=pre_Games['away_team_id'],
-                                match_date=pre_Games['date'],
+                                match_date=pre_Games['date'], include_draws=False
                                 )
     colley_ratings = colley.get_ratings()
 
@@ -165,5 +165,3 @@ def plotBrierScores(seasons=DEFAULT_SEASONS, *args, title=None, filename=None):
     plt.ylabel('Brier Score')
     plt.grid(True)
     plt.show()
-
-plotBrierScores()
