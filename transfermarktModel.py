@@ -66,8 +66,8 @@ class TMModelOrderedProbit(BaseModel):
         return super()._calc_success_ratio(data)
     
     @classmethod
-    def plotBrierScores(cls, country, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(country, seasons=seasons, *args, title=title, filename=filename)
+    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
+        return super().plotBrierScores(seasons=seasons, **kwargs)
 
 
 # An ordered probit model trained on an OLS goal difference model
@@ -149,7 +149,7 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    TMModelOrderedProbit.plotBrierScores("germany")
-    TMModelOrderedProbitOLSGoalDiff.plotBrierScores("germany")
+    TMModelOrderedProbit.plotBrierScores(country="germany")
+    TMModelOrderedProbitOLSGoalDiff.plotBrierScores(country="germany")
     end = perf_counter()
     print(end-start)

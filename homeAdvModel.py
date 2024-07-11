@@ -73,6 +73,6 @@ class HomeAdvModel(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    HomeAdvModel.plotBrierScores("germany")
+    HomeAdvModel.plotBrierScores(country="germany")
     end = perf_counter()
     print(end-start)
