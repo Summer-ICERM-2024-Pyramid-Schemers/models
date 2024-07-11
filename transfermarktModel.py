@@ -48,8 +48,26 @@ class TMModelOrderedProbit(BaseModel):
         return super()._calc_brier_scores(data)
     
     @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
+    def getSuccessRatio(cls, season, league):
+        """
+        Returns a list containing Brier scores for each game of a given season in a given league
+        
+        season - A year between 2010 and 2023 (inclusive)
+        league - An integer between 1 and 4 (inclusive)
+            1 - Premier League
+            2 - Championship
+            3 - League One
+            4 - League Two
+    
+        """
+        data = getYearData(season, league)
+        model = cls.getModel(season, league)
+        data[["pred-loss","pred-draw","pred-win"]] = model.predict(data[['Home','Value']])
+        return super()._calc_success_ratio(data)
+    
+    @classmethod
+    def plotBrierScores(cls, country, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(country, seasons=seasons, *args, title=title, filename=filename)
 
 
 # An ordered probit model trained on an OLS goal difference model
@@ -106,10 +124,32 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
     def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
         return super().plotBrierScores(seasons=seasons, **kwargs)
 
+    @classmethod
+    def getSuccessRatio(cls, season, league):
+        """
+        Returns a list containing Brier scores for each game of a given season in a given league
+        
+        season - A year between 2010 and 2023 (inclusive)
+        league - An integer between 1 and 4 (inclusive)
+            1 - Premier League
+            2 - Championship
+            3 - League One
+            4 - League Two
+    
+        """
+        data = getYearData(season, league)
+
+        OLSmodel,probitModel = cls.getModel(season, league)
+        intPred = OLSmodel.predict(data[['Home','Value']])
+        predictions = [probitModel.predict(i)[0] for i in intPred]
+
+        data[["pred-loss","pred-draw","pred-win"]] = predictions
+        return super()._calc_success_ratio(data)
+
 
 if __name__ == "__main__":
     start = perf_counter()
-    TMModelOrderedProbit.plotBrierScores()
-    TMModelOrderedProbitOLSGoalDiff.plotBrierScores()
+    TMModelOrderedProbit.plotBrierScores("germany")
+    TMModelOrderedProbitOLSGoalDiff.plotBrierScores("germany")
     end = perf_counter()
     print(end-start)

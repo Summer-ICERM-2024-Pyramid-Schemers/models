@@ -6,7 +6,8 @@ import pandas as pd
 
 from weighted_colley_engine import WeightedColleyEngine
 
-DATABASE_FILEPATH = "english_football_data.sqlite"
+DATABASE_FILEPATH = "football_data.sqlite"
+
 
 def _prepare_data_for_transfermarkt_model(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
