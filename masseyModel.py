@@ -122,16 +122,18 @@ class WeightedMasseyModel(BaseModel):
         wm_ratings = wm_ratings.rename(columns={'mv_rating':'rating'})
 
         # merge ratings with game data before predict season
-        ratings = wm_ratings[['team', 'rating', 'season']].copy()
+        ratings = wm_ratings[['team', 'rating']].copy()
 
         home_rating = ratings.rename(columns={'team': 'home_team_id', 
                                             'rating': 'home_rating'})
         away_rating = ratings.rename(columns={'team': 'away_team_id', 
                                             'rating': 'away_rating'})
         Year_Games = Games.loc[Games['season']==season, :]
-        Year_Games = pd.merge(Year_Games, home_rating, on=['home_team_id', 'season'], how='left')
-        Year_Games = pd.merge(Year_Games, away_rating, on=['away_team_id', 'season'], how='left')
+        Year_Games = pd.merge(Year_Games, home_rating, on=['home_team_id'], how='left')
+        Year_Games = pd.merge(Year_Games, away_rating, on=['away_team_id'], how='left')
         Year_Games = Year_Games.dropna()
+
+        Year_Games['home_rating'] = Year_Games['home_rating'] + wm_home_advantage
 
         Year_Games['rating_diff'] = Year_Games['home_rating'] - Year_Games['away_rating']
 
