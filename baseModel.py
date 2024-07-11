@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-DEFAULT_SEASONS = range(2010,2024)
+DEFAULT_SEASONS = range(2012,2024)
 
 class BaseModel(ABC):
     _plot_title = None
@@ -48,7 +48,7 @@ class BaseModel(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args, title=None, filename=None):
+    def plotBrierScores(cls, country, seasons=DEFAULT_SEASONS, *args, title=None, filename=None):
         """
         Plots Brier scores from all leagues and seasons.
         """
@@ -57,8 +57,12 @@ class BaseModel(ABC):
             title = cls._plot_title or f"{cls.__name__} Brier Score by Season and League"
         if filename is None:
             filename = cls._plot_filename or f"{cls.__name__}_brier_scores.png"
-        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,5)] for season in seasons],
-                            columns=['Premier League','Championship','League One','League Two'], index=seasons)
+        if country.casefold() == "england":
+            briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,5)] for season in seasons],
+                                columns=['Premier League','Championship','League One','League Two'], index=seasons)
+        elif country.casefold() == "germany":
+            briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(5,7)] for season in seasons],
+                                columns=['Bundesliga','2. Bundesliga'], index=seasons)         
 
         briers.plot()
 

@@ -74,6 +74,6 @@ class HomeAdvModel(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    HomeAdvModel.getSuccessRatio(2023, 4)
+    HomeAdvModel.plotBrierScores()
     end = perf_counter()
     print(end-start)
