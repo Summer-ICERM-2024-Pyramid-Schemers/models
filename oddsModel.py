@@ -41,6 +41,6 @@ class BettingOddsModel(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    print(BettingOddsModel.getSuccessRatio(2023,4))
+    BettingOddsModel.plotBrierScores("germany")
     end = perf_counter()
     print(end-start)

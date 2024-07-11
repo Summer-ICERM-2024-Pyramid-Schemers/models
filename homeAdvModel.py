@@ -68,12 +68,12 @@ class HomeAdvModel(BaseModel):
 
     
     @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
+    def plotBrierScores(cls, league, seasons=range(2012,2024), *args, title=None, filename=None):
+        return super().plotBrierScores(league, seasons=seasons, *args, title=title, filename=filename)
 
 
 if __name__ == "__main__":
     start = perf_counter()
-    HomeAdvModel.plotBrierScores()
+    HomeAdvModel.plotBrierScores("germany")
     end = perf_counter()
     print(end-start)

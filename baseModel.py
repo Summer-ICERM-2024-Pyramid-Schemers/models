@@ -62,7 +62,9 @@ class BaseModel(ABC):
                                 columns=['Premier League','Championship','League One','League Two'], index=seasons)
         elif country.casefold() == "germany":
             briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(5,7)] for season in seasons],
-                                columns=['Bundesliga','2. Bundesliga'], index=seasons)         
+                                columns=['Bundesliga','2. Bundesliga'], index=seasons)
+        else:
+            raise Exception("Invalid country name")         
 
         briers.plot()
 

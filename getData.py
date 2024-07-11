@@ -4,7 +4,7 @@ import sqlite3
 import numpy as np
 import pandas as pd
 
-DATABASE_FILEPATH = "english_football_data.sqlite"
+DATABASE_FILEPATH = "football_data.sqlite"
 
 def _prepare_data_for_transfermarkt_model(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
