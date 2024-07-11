@@ -4,7 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-DEFAULT_SEASONS = range(2012,2024)
+DEFAULT_SEASONS = range(2010,2024)
+# This list should be the names of the leagues as they should appear in plotting
+# This only works properly when the ids begin at 1 and have a consistent step of 1
+ALL_LEAGUES = ["Premier League","Championship","League One","League Two","Bundesliga","2. Bundesliga"]
+COUNTRY_TO_LEAGUES = {None:[1,2,3,4,5,6], "england":[1,2,3,4], "germany":[5,6]}
+
 
 class BaseModel(ABC):
     _plot_title = None
@@ -31,7 +36,6 @@ class BaseModel(ABC):
         
         return np.mean(equal_rows)
 
-
     @classmethod
     @abstractmethod
     def getBrierScores(cls, season, league):
@@ -48,30 +52,43 @@ class BaseModel(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def plotBrierScores(cls, country, seasons=DEFAULT_SEASONS, *args, title=None, filename=None):
+    def plotBrierScores(cls, *, seasons=DEFAULT_SEASONS, leagues=None, title=None, filename=None, country=None):
         """
         Plots Brier scores from all leagues and seasons.
         """
-
+        if leagues is None:
+            if isinstance(country,str):
+                country = country.casefold()
+            leagues = COUNTRY_TO_LEAGUES[country]
         if title is None:
             title = cls._plot_title or f"{cls.__name__} Brier Score by Season and League"
         if filename is None:
             filename = cls._plot_filename or f"{cls.__name__}_brier_scores.png"
-        if country.casefold() == "england":
-            briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,5)] for season in seasons],
-                                columns=['Premier League','Championship','League One','League Two'], index=seasons)
-        elif country.casefold() == "germany":
-            briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(5,7)] for season in seasons],
-                                columns=['Bundesliga','2. Bundesliga'], index=seasons)
-        else:
-            raise Exception("Invalid country name")         
+        
+        leagues = [ALL_LEAGUES[l-1] if isinstance(l,int) else l for l in leagues]
+        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, ALL_LEAGUES.index(league)+1)) for league in leagues] for season in seasons], columns=leagues, index=seasons)
 
         briers.plot()
-
         plt.title(title)
-        plt.xlabel('Season')
-        plt.ylabel('Brier Score')
+        plt.xlabel("Season")
+        plt.ylabel("Brier Score")
         plt.grid(True)
 
         plt.savefig(filename)
+        
+    @classmethod
+    @abstractmethod
+    def getSuccessRatio(cls, season, league):
+        """
+        Returns a list containing Brier scores for each game of a given season in a given league
+        
+        season - A year between 2010 and 2023 (inclusive)
+        league - An integer between 1 and 4 (inclusive)
+            1 - Premier League
+            2 - Championship
+            3 - League One
+            4 - League Two
+    
+        """
+        raise NotImplementedError()
     

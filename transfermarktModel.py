@@ -66,8 +66,8 @@ class TMModelOrderedProbit(BaseModel):
         return super()._calc_success_ratio(data)
     
     @classmethod
-    def plotBrierScores(cls, country, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(country, seasons=seasons, *args, title=title, filename=filename)
+    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
+        return super().plotBrierScores(seasons=seasons, **kwargs)
 
 
 # An ordered probit model trained on an OLS goal difference model
@@ -121,6 +121,10 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
         return super()._calc_brier_scores(data)
     
     @classmethod
+    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
+        return super().plotBrierScores(seasons=seasons, **kwargs)
+
+    @classmethod
     def getSuccessRatio(cls, season, league):
         """
         Returns a list containing Brier scores for each game of a given season in a given league
@@ -141,15 +145,11 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_success_ratio(data)
-    
-    @classmethod
-    def plotBrierScores(cls, country, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(country, seasons=seasons, *args, title=title, filename=filename)
 
 
 if __name__ == "__main__":
     start = perf_counter()
-    TMModelOrderedProbit.plotBrierScores("germany")
-    TMModelOrderedProbitOLSGoalDiff.plotBrierScores("germany")
+    TMModelOrderedProbit.plotBrierScores(country="germany")
+    TMModelOrderedProbitOLSGoalDiff.plotBrierScores(country="germany")
     end = perf_counter()
     print(end-start)

@@ -41,6 +41,6 @@ class BettingOddsModel(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    BettingOddsModel.plotBrierScores("germany")
+    BettingOddsModel.plotBrierScores(country="germany")
     end = perf_counter()
     print(end-start)
