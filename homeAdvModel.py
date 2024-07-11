@@ -47,10 +47,9 @@ class HomeAdvModel(BaseModel):
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_brier_scores(data)
 
-    
     @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), *args, title=None, filename=None):
-        return super().plotBrierScores(seasons=seasons, *args, title=title, filename=filename)
+    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
+        return super().plotBrierScores(seasons=seasons, **kwargs)
 
 
 if __name__ == "__main__":

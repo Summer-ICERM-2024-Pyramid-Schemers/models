@@ -5,6 +5,10 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_SEASONS = range(2010,2024)
+# This list should be the names of the leagues as they should appear in plotting
+# This only works properly when the ids begin at 1 and have a consistent step of 1
+DEFAULT_LEAGUES = ['Premier League','Championship','League One','League Two']
+
 
 class BaseModel(ABC):
     _plot_title = None
@@ -34,7 +38,7 @@ class BaseModel(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def plotBrierScores(cls, seasons=DEFAULT_SEASONS, *args, title=None, filename=None):
+    def plotBrierScores(cls, *, seasons=DEFAULT_SEASONS, leagues=DEFAULT_LEAGUES, title=None, filename=None):
         """
         Plots Brier scores from all leagues and seasons.
         """
@@ -43,11 +47,10 @@ class BaseModel(ABC):
             title = cls._plot_title or f"{cls.__name__} Brier Score by Season and League"
         if filename is None:
             filename = cls._plot_filename or f"{cls.__name__}_brier_scores.png"
-        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,5)] for season in seasons],
-                            columns=['Premier League','Championship','League One','League Two'], index=seasons)
+        leagues = [DEFAULT_LEAGUES[l-1] if isinstance(l,int) else l for l in leagues]
+        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, league)) for league in range(1,len(leagues)+1)] for season in seasons], columns=leagues, index=seasons)
 
         briers.plot()
-
         plt.title(title)
         plt.xlabel('Season')
         plt.ylabel('Brier Score')

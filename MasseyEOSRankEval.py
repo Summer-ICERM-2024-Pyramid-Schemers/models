@@ -5,7 +5,6 @@ import pandas as pd
 from scipy.stats import spearmanr
 
 from getData import fetch_data_for_massey_eos_eval
-from massey_engine import MasseyEngine
 from weighted_massey_engine import WeightedMasseyEngine
 
 
@@ -42,7 +41,7 @@ def ranking_eval(season):
 
     #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
 
-    m_ratings = MasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
+    m_ratings, m_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
                     goals_away=pre_Matches['fulltime_away_goals'], 
                     teams_home=pre_Matches['home_team_id'],
                     teams_away=pre_Matches['away_team_id'])

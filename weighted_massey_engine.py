@@ -6,7 +6,7 @@ from scipy import stats
 class WeightedMasseyEngine:
     @classmethod
     def get_ratings(cls, goals_home, goals_away, teams_home,
-        teams_away, match_date = None, avg_mv = None) -> pd.DataFrame:
+                    teams_away, match_date = None, avg_mv = None) -> pd.DataFrame:
         """
         Gets the Weighted Massey ratings
 

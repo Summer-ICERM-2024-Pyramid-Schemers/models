@@ -6,12 +6,12 @@ from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 from baseModel import BaseModel
 from getData import fetch_data_for_massey_eos_eval
-from weighted_massey_engine import WeightedMasseyEngine
+from weighted_colley_engine import WeightedColleyEngine
 
 
-class WeightedMasseyModel(BaseModel):
-    _plot_title = "Weighted Massey Brier Score by Season and League"
-    _plot_filename = "wtd_massey_brier_scores.png"
+class WeightedColleyModel(BaseModel):
+    _plot_title = "Weighted Colley Brier Score by Season and League"
+    _plot_filename = "wtd_colley_brier_scores.png"
 
     @classmethod
     @cache
@@ -20,25 +20,23 @@ class WeightedMasseyModel(BaseModel):
         Function returns a dataframe which contains the game statistics of given season and league (if input includes a value league id, otherwise it returns stats of all games in that season)
             - one row of dataframe represents 1 game
             - each row also contains 
-                1) massey ratings of home and away team, which are calculated using data from all previous seasons
+                1) colley ratings of home and away team, which are calculated using data from all previous seasons
                 2) rating differentials = home team rating - away team rating
         """
         Games, ranking, marketValues = fetch_data_for_massey_eos_eval()
 
         pre_Games = Games.loc[Games['season'] < season, :]
-        avg_mv = marketValues.loc[marketValues['season'] == season, :]
-    
-        # get WEIGHTED massey ratings using data before predict season
-        wm_ratings, wm_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Games['fulltime_home_goals'], 
-                                    goals_away=pre_Games['fulltime_away_goals'], teams_home=pre_Games['home_team_id'],
-                                    teams_away=pre_Games['away_team_id'], match_date=pre_Games['date'], avg_mv=avg_mv)
-
-        # if uses massey rating in combination with market value
-        wm_ratings = wm_ratings.drop(columns=['rating'])
-        wm_ratings = wm_ratings.rename(columns={'mv_rating':'rating'})
+   
+        # get WEIGHTED colley ratings using data before predict season
+        colley_ratings = WeightedColleyEngine.get_ratings(goals_home=pre_Games['fulltime_home_goals'],
+                                    goals_away=pre_Games['fulltime_away_goals'],
+                                    teams_home=pre_Games['home_team_id'],
+                                    teams_away=pre_Games['away_team_id'],
+                                    match_date=pre_Games['date'], include_draws=False)
 
         # merge ratings with game data before predict season
-        ratings = wm_ratings[['team', 'rating', 'season']].copy()
+        ratings = colley_ratings[['team', 'rating']].copy()
+        ratings.loc[:, 'season'] = season
 
         home_rating = ratings.rename(columns={'team': 'home_team_id', 
                                             'rating': 'home_rating'})
@@ -52,7 +50,7 @@ class WeightedMasseyModel(BaseModel):
         Year_Games['rating_diff'] = Year_Games['home_rating'] - Year_Games['away_rating']
 
         return Year_Games
-
+    
     @classmethod
     def getModel(cls, season, league):
         data = cls._get_model_by_season(season)
@@ -70,12 +68,11 @@ class WeightedMasseyModel(BaseModel):
             - game statistics of predict season
             - predicted probability of win, draw, loss of each game in predict season 
         """
-
         # change 2011 to (earliest season + 1) if dataset is updated
         # Concatenate all collected DataFrames into a single DataFrame
         pre_data = pd.concat([cls.getModel(Year, None) for Year in range(2011, season)], ignore_index=True)
 
-        model = OrderedModel(pre_data['result'],pre_data['rating_diff'],distr = 'probit')
+        model = OrderedModel(pre_data['result'],pre_data['rating_diff'],distr='probit')
         model = model.fit(method='bfgs')
 
         # get games data and massey ratings for predict season and league
@@ -96,9 +93,9 @@ class WeightedMasseyModel(BaseModel):
     def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
         return super().plotBrierScores(seasons=seasons, **kwargs)
 
-class MasseyModel(WeightedMasseyModel):
-    _plot_title = "Massey Brier Score by Season and League"
-    _plot_filename = "massey_brier_scores.png"
+class ColleyModel(WeightedColleyModel):
+    _plot_title = "Colley Brier Score by Season and League"
+    _plot_filename = "colley_brier_scores.png"
 
     @classmethod
     @cache
@@ -107,20 +104,22 @@ class MasseyModel(WeightedMasseyModel):
         Function returns a dataframe which contains the game statistics of given season and league (if input includes a value league id, otherwise it returns stats of all games in that season)
             - one row of dataframe represents 1 game
             - each row also contains 
-                1) massey ratings of home and away team, which are calculated using data from all previous seasons
+                1) colley ratings of home and away team, which are calculated using data from all previous seasons
                 2) rating differentials = home team rating - away team rating
         """
         Games, ranking, marketValues = fetch_data_for_massey_eos_eval()
 
         pre_Games = Games.loc[Games['season'] < season, :]
+   
+        # get UNWEIGHTED colley ratings using data before predict season by removing the match_date
+        colley_ratings = WeightedColleyEngine.get_ratings(goals_home=pre_Games['fulltime_home_goals'],
+                                    goals_away=pre_Games['fulltime_away_goals'],
+                                    teams_home=pre_Games['home_team_id'],
+                                    teams_away=pre_Games['away_team_id'],
+                                    include_draws=False)
 
-        # get Massey ratings using 
-        massey_ratings, home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Games['fulltime_home_goals'], 
-                        goals_away=pre_Games['fulltime_away_goals'], teams_home=pre_Games['home_team_id'],
-                        teams_away=pre_Games['away_team_id'])
-
-        # merge ratings with game data
-        ratings = massey_ratings[['team', 'rating']].copy()
+        # merge ratings with game data before predict season
+        ratings = colley_ratings[['team', 'rating']].copy()
         ratings.loc[:, 'season'] = season
 
         home_rating = ratings.rename(columns={'team': 'home_team_id', 
@@ -139,7 +138,7 @@ class MasseyModel(WeightedMasseyModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    MasseyModel.plotBrierScores()
-    WeightedMasseyModel.plotBrierScores()
+    ColleyModel.plotBrierScores()
+    WeightedColleyModel.plotBrierScores()
     end = perf_counter()
     print(end-start)
