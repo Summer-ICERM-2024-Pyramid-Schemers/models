@@ -8,7 +8,8 @@ from getData import fetch_data_for_colley_accuracy
 def get_accuracy(season,league):
     games_table = fetch_data_for_colley_accuracy(season,league)
     non_draws = games_table.loc[games_table["result"].to_numpy() != 0,:]
-    true_counter = np.sum(np.sign(non_draws['home_team_colley']-non_draws['away_team_colley'])==non_draws["result"])
+    
+    true_counter = np.count_nonzero(np.sign(non_draws['home_team_colley']-non_draws['away_team_colley'])==non_draws["result"])
     return true_counter / len(non_draws)
 
 
