@@ -4,7 +4,10 @@ import sqlite3
 import numpy as np
 import pandas as pd
 
+from weighted_colley_engine import WeightedColleyEngine
+
 DATABASE_FILEPATH = "football_data.sqlite"
+
 
 def _prepare_data_for_transfermarkt_model(games_data: pd.DataFrame):
     home_vec = np.random.choice([1,-1],size=len(games_data))
@@ -100,44 +103,21 @@ def norm_odds_vectorized(data):
     juice = np.sum(temp,axis=1,keepdims=True)
     return temp/juice
 
-#TODO remove and replace
-@lru_cache(1)
-def fetch_data_for_massey_model():
-    con = sqlite3.connect(DATABASE_FILEPATH)
-
-    gamesQuery = f"""
-    SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
-    FROM Matches
-    """
-
-    mvQuery = f"""
-    SELECT season, league_id, team_id, avg_market_val
-    FROM TeamMarketvalues
-    """
-
-    Games = pd.read_sql_query(gamesQuery, con)
-    marketValues = pd.read_sql_query(mvQuery, con)
-    con.close()
-
-    Games['result'] = np.sign(Games["fulltime_home_goals"] - Games["fulltime_away_goals"]).astype(int)
-
-    return Games, marketValues
-
 @lru_cache(1)
 def fetch_data_for_massey_eos_eval():
     con = sqlite3.connect(DATABASE_FILEPATH)
 
-    gamesQuery = f"""
-    SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result
+    gamesQuery = """
+    SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
     FROM Matches
     """
 
-    rankQuery = f"""
+    rankQuery = """
     SELECT season, league_id, team_id, ranking	
     FROM EOSStandings
     """
 
-    mvQuery = f"""
+    mvQuery = """
     SELECT season, league_id, team_id, avg_market_val
     FROM TeamMarketvalues
     """
@@ -147,4 +127,37 @@ def fetch_data_for_massey_eos_eval():
     marketValues = pd.read_sql_query(mvQuery, con)
     con.close()
 
+    Games['result'] = np.sign(Games["fulltime_home_goals"] - Games["fulltime_away_goals"]).astype(int)
+
     return Games, ranking, marketValues
+
+def fetch_data_for_colley_accuracy(season,league):
+    con = sqlite3.connect(DATABASE_FILEPATH)
+
+    gamesQuery = f"""
+    SELECT home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
+    FROM Matches
+    WHERE season = @season
+    AND league_id = @league
+    """
+    
+    Games = pd.read_sql_query(gamesQuery, con, params={"season":season,"league":league})
+
+    home_goals_list = Games.loc[:,"fulltime_home_goals"]
+    away_goals_list = Games.loc[:,"fulltime_away_goals"]
+    home_teams_list = Games.loc[:,'home_team_id']
+    away_teams_list = Games.loc[:,'away_team_id']
+
+    N = 8*len(home_goals_list)//10
+    colley_ratings = WeightedColleyEngine.get_ratings(home_goals_list[:N],away_goals_list[:N],home_teams_list[:N],away_teams_list[:N])
+
+    dictionary = colley_ratings.set_index('team')['rating'].to_dict()
+
+    Games['home_team_colley'] = Games['home_team_id'].map(dictionary)
+    Games['away_team_colley'] = Games['away_team_id'].map(dictionary)
+    
+    Games = Games.iloc[N:]
+    Games.reset_index(drop=True, inplace=True)
+    Games['result'] = np.sign(Games["fulltime_home_goals"] - Games["fulltime_away_goals"]).astype(int)
+
+    return Games
