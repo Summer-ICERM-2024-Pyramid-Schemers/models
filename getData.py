@@ -109,7 +109,7 @@ def fetch_data_for_massey_eos_eval():
     con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = """
-    SELECT season, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
+    SELECT season, id AS match_id, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
     FROM Matches
     """
 
@@ -136,7 +136,7 @@ def fetch_data_for_colley_accuracy(season,league):
     con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = """
-    SELECT home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
+    SELECT id AS match_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
     FROM Matches
     WHERE season = @season
     AND league_id = @league
@@ -167,7 +167,7 @@ def fetch_data_for_massey_accuracy(season,league):
     con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = """
-    SELECT date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result
+    SELECT id AS match_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result
     FROM Matches
     WHERE season = @season
     AND league_id = @league
