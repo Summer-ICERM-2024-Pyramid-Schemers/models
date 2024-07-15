@@ -17,10 +17,13 @@ class BaseModel(ABC):
 
     @classmethod
     def _calc_brier_scores(cls, data, win_draw_loss=["pred-win","pred-draw","pred-loss"]):
+        indices = list(data.index.values)
         reality_arr = data["result"].to_numpy()[:,None] == np.arange(1,-2,-1)[None,:]
         # ... while here we are using win, draw, loss
         diff_arr = data[win_draw_loss].to_numpy() - reality_arr
         brierScores = 1/3*np.sum(np.square(diff_arr),axis=1)
+        brierScores = pd.concat([pd.Series(indices,name='match_id'),pd.Series(brierScores,name='brier_score')], axis = 1)
+        # brierScores is a dataframe of match ids and brier scores for the match
         return brierScores
     
     @classmethod

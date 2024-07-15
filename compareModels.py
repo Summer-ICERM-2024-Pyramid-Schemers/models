@@ -8,8 +8,9 @@ from oddsModel import BettingOddsModel
 from homeAdvModel import HomeAdvModel
 from transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
 from masseyModel import MasseyModel, WeightedMasseyModel
+from colleyModel import ColleyModel, WeightedColleyModel
 
-def compareModels(getM1BrierScores, getM2BrierScores, country, excludel2 = False):
+def compareModels(getM1BrierScores, getM2BrierScores, country):
     """
     Returns a dataframe containing a list for each league and season.
 
@@ -35,48 +36,51 @@ def compareModels(getM1BrierScores, getM2BrierScores, country, excludel2 = False
         if country.casefold() == "england":
             b1 = getM1BrierScores(season, 1)
             b2 = getM2BrierScores(season, 1)
-            ttest = stats.ttest_rel(b1,b2)
+            brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
             ci = ttest.confidence_interval()
-            prem = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
+            prem = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 2)
             b2 = getM2BrierScores(season, 2)
-            ttest = stats.ttest_rel(b1,b2)
+            brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
             ci = ttest.confidence_interval()
-            Ch = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
+            Ch = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 3)
             b2 = getM2BrierScores(season, 3)
-            ttest = stats.ttest_rel(b1,b2)
+            brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
             ci = ttest.confidence_interval()
-            l1 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
-            if excludel2 == False:
-                b1 = getM1BrierScores(season, 4)
-                b2 = getM2BrierScores(season, 4)
-                ttest = stats.ttest_rel(b1,b2)
-                ci = ttest.confidence_interval()
-                l2 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
-            elif excludel2 == True:
-                l2 = [0,0,0,0]
+            l1 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            b1 = getM1BrierScores(season, 4)
+            b2 = getM2BrierScores(season, 4)
+            brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ci = ttest.confidence_interval()
+            l2 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
             comparison = pd.concat([pd.DataFrame([[season, prem, Ch, l1, l2]], 
                                             columns=comparison.columns), comparison], 
                                             ignore_index=True)
         elif country.casefold() == "germany":
             b1 = getM1BrierScores(season, 5)
             b2 = getM2BrierScores(season, 5)
-            ttest = stats.ttest_rel(b1,b2)
+            brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
             ci = ttest.confidence_interval()
-            bund1 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
+            bund1 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 6)
             b2 = getM2BrierScores(season, 6)
-            ttest = stats.ttest_rel(b1,b2)
+            brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
             ci = ttest.confidence_interval()
-            bund2 = [np.mean(b1) - np.mean(b2), ttest[1], ci[0], ci[1]]
+            bund2 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
             comparison = pd.concat([pd.DataFrame([[season, bund1, bund2]], 
                                             columns=comparison.columns), comparison], 
                                             ignore_index=True)
     return comparison
 
-def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country, excludel2 = False):
-    comparison = compareModels(getM1BrierScores, getM2BrierScores, country, excludel2)
+def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country):
+    comparison = compareModels(getM1BrierScores, getM2BrierScores, country)
     comparison = comparison.set_index("Year")
     diffs = comparison.applymap(lambda x: x[0])
     pvalues = comparison.applymap(lambda x: x[1])
@@ -109,7 +113,7 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country
 
     plt.show()
 
-def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country, excludel2 = False):
+def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country):
     """
     Returns a data frame with a column for each league, with a list containing aggregate data
 
@@ -124,75 +128,77 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country, excludel
     
     if country.casefold() == "england":
         comparison = pd.DataFrame(columns=['Premier League','Championship','League One','League Two'])
-        l1m1 = []
-        l2m1 = []
-        l3m1 = []
-        l4m1 = []
-        l1m2 = []
-        l2m2 = []
-        l3m2 = []
-        l4m2 = []
+        l1m1 = pd.DataFrame(columns=['match_id','brier_score'])
+        l2m1 = pd.DataFrame(columns=['match_id','brier_score'])
+        l3m1 = pd.DataFrame(columns=['match_id','brier_score'])
+        l4m1 = pd.DataFrame(columns=['match_id','brier_score'])
+        l1m2 = pd.DataFrame(columns=['match_id','brier_score'])
+        l2m2 = pd.DataFrame(columns=['match_id','brier_score'])
+        l3m2 = pd.DataFrame(columns=['match_id','brier_score'])
+        l4m2 = pd.DataFrame(columns=['match_id','brier_score'])
     elif country.casefold() == "germany":
         comparison = pd.DataFrame(columns=['Bundesliga', '2. Bundesliga'])
-        l5m1 = []
-        l5m2 = []
-        l6m1 = []
-        l6m2 = []
+        l5m1 = pd.DataFrame(columns=['match_id','brier_score'])
+        l5m2 = pd.DataFrame(columns=['match_id','brier_score'])
+        l6m1 = pd.DataFrame(columns=['match_id','brier_score'])
+        l6m2 = pd.DataFrame(columns=['match_id','brier_score'])
     else:
         raise Exception("Invalid country")
     
     if country.casefold() == 'england':
         for season in range(2012, 2024, 1):
-            l1m1.extend(getM1BrierScores(season, 1))
-            l1m2.extend(getM2BrierScores(season, 1))
+            l1m1 = l1m1.append(getM1BrierScores(season, 1))
+            l1m2 = l1m2.append(getM2BrierScores(season, 1))
 
-            l2m1.extend(getM1BrierScores(season, 2))
-            l2m2.extend(getM2BrierScores(season, 2))
+            l2m1 = l2m1.append(getM1BrierScores(season, 2))
+            l2m2 = l2m2.append(getM2BrierScores(season, 2))
 
-            l3m1.extend(getM1BrierScores(season, 3))
-            l3m2.extend(getM2BrierScores(season, 3))
+            l3m1 = l3m1.append(getM1BrierScores(season, 3))
+            l3m2 = l3m2.append(getM2BrierScores(season, 3))
 
-            if excludel2 == False:
-                l4m1.extend(getM1BrierScores(season, 4))
-                l4m2.extend(getM2BrierScores(season, 4))
+            l4m1 = l4m1.append(getM1BrierScores(season, 4))
+            l4m2 = l4m2.append(getM2BrierScores(season, 4))
 
-        ttest = stats.ttest_rel(l1m1, l1m2)
+        brier = l1m1.join(l1m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
         ci = ttest.confidence_interval()
-        prem = [np.mean(l1m1) - np.mean(l1m2), ttest[1], ci[0], ci[1]]
+        prem = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
 
-        ttest = stats.ttest_rel(l2m1, l2m2)
+        brier = l2m1.join(l2m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
         ci = ttest.confidence_interval()
-        Ch = [np.mean(l2m1) - np.mean(l2m2), ttest[1], ci[0], ci[1]]
+        Ch = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
 
-        ttest = stats.ttest_rel(l3m1, l3m2)
+        brier = l3m1.join(l3m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
         ci = ttest.confidence_interval()
-        l1 = [np.mean(l3m1) - np.mean(l3m2), ttest[1], ci[0], ci[1]]
+        l1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
 
-        if excludel2 == False:
-            ttest = stats.ttest_rel(l4m1, l4m2)
-            ci = ttest.confidence_interval()
-            l2 = [np.mean(l4m1) - np.mean(l4m2), ttest[1], ci[0], ci[1]]
-        elif excludel2 == True:
-            l2 = [0,0,0,0]
+        brier = l4m1.join(l4m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+        ci = ttest.confidence_interval()
+        l2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
 
         comparison = pd.concat([pd.DataFrame([[prem, Ch, l1, l2]], 
                                             columns=comparison.columns), comparison], 
                                             ignore_index=True)
     elif country.casefold() == 'germany':
         for season in range(2012, 2024, 1):
-            l5m1.extend(getM1BrierScores(season, 5))
-            l5m2.extend(getM2BrierScores(season, 5))
+            l5m1 = l5m1.append(getM1BrierScores(season, 5))
+            l5m2 = l5m2.append(getM2BrierScores(season, 5))
 
-            l6m1.extend(getM1BrierScores(season, 6))
-            l6m2.extend(getM2BrierScores(season, 6))
+            l6m1 = l6m1.append(getM1BrierScores(season, 6))
+            l6m2 = l6m2.append(getM2BrierScores(season, 6))
 
-        ttest = stats.ttest_rel(l5m1, l5m2)
+        brier = l5m1.join(l5m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
         ci = ttest.confidence_interval()
-        bund1 = [np.mean(l5m1) - np.mean(l5m2), ttest[1], ci[0], ci[1]]
+        bund1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
 
-        ttest = stats.ttest_rel(l6m1, l6m2)
+        brier = l6m1.join(l6m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
         ci = ttest.confidence_interval()
-        bund2 = [np.mean(l6m1) - np.mean(l6m2), ttest[1], ci[0], ci[1]]
+        bund2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
 
         comparison = pd.concat([pd.DataFrame([[bund1, bund2]],
                                             columns=comparison.columns), comparison], 
@@ -200,8 +206,8 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country, excludel
     return comparison
 
 
-def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country, excludel2 = False):
-    comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores, country, excludel2)
+def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country):
+    comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores, country)
 
     diffs = comparison.applymap(lambda x: x[0])
     pvalues = comparison.applymap(lambda x: x[1])
@@ -230,6 +236,7 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
     plt.title(f'Comparison of Brier Scores: {M1Title} - {M2Title}')
     plt.xlabel('League')
     plt.ylabel('Difference in Brier Score')
+    plt.ylim(-0.031,0)
     plt.savefig(M1Title + " - " + M2Title + " AGG")
 
     plt.show()
@@ -322,21 +329,29 @@ def plotSRAggregateComparison(getM1SuccessRatio, getM2SuccessRatio, M1Title, M2T
     plt.show()
 
 # Odds - HA
-#plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "Germany")
-plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "Germany")
+#plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "England")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "England")
 
 # Odds - TM1
-#plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
-#plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1")
+#plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1", "Germany")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1", "Germany")
 
 # Odds - TM2
-#plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
-#plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2")
+#plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2", "Germany")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Betting Odds", "Transfermarkt Model 2", "Germany")
 
 # TM1 - TM2
-#plotComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
-#plotAggregateComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2")
+#plotComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2", "Germany")
+#plotAggregateComparison(TMModelOrderedProbit.getBrierScores, TMModelOrderedProbitOLSGoalDiff.getBrierScores, "Transfermarkt Model 1", "Transfermarkt Model 2", "Germany")
 
 # TM2 - HA
-#plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
-#plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage")
+#plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage", "Germany")
+#plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage", "England")
+
+#plotSRAggregateComparison(BettingOddsModel.getSuccessRatio, HomeAdvModel.getSuccessRatio, "Betting Odds", "Home Advantage", "Germany")
+#plotSRAggregateComparison(TMModelOrderedProbit.getSuccessRatio, HomeAdvModel.getSuccessRatio, "Transfermarkt Model 1", "Home Advantage", "Germany")
+#plotSRAggregateComparison(BettingOddsModel.getSuccessRatio, TMModelOrderedProbit.getSuccessRatio, "Betting Odds", "Transfermarkt Model 1", "Germany")
+
+#plotAggregateComparison(WeightedMasseyModel.getBrierScores, WeightedColleyModel.getBrierScores, "Weighted Massey", "Weighted Colley", "germany")
+
+#plotAggregateComparison(TMModelOrderedProbit.getBrierScores, WeightedColleyModel.getBrierScores, "Transfermarkt Model 1", "Weighted Massey", "England")
