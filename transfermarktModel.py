@@ -149,7 +149,7 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    TMModelOrderedProbit.plotBrierScores(country="germany")
-    TMModelOrderedProbitOLSGoalDiff.plotBrierScores(country="germany")
+    TMModelOrderedProbit.plotBrierScores(country="england")
+    TMModelOrderedProbitOLSGoalDiff.plotBrierScores(country="england")
     end = perf_counter()
     print(end-start)

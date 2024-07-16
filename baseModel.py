@@ -43,7 +43,7 @@ class BaseModel(ABC):
     @abstractmethod
     def getBrierScores(cls, season, league):
         """
-        Returns a list containing odds Brier scores for each game of a given season in a given league
+        Returns a dataframe containing match ids and Brier scores for each game of a given season in a given league
         
         season - A year between 2010 and 2023 (inclusive)
         league - An integer between 1 and 4 (inclusive)
@@ -69,7 +69,7 @@ class BaseModel(ABC):
             filename = cls._plot_filename or f"{cls.__name__}_brier_scores.png"
         
         leagues = [ALL_LEAGUES[l-1] if isinstance(l,int) else l for l in leagues]
-        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, ALL_LEAGUES.index(league)+1)) for league in leagues] for season in seasons], columns=leagues, index=seasons)
+        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, ALL_LEAGUES.index(league)+1)["brier_score"].to_list()) for league in leagues] for season in seasons], columns=leagues, index=seasons)
 
         briers.plot()
         plt.title(title)
