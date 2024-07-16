@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from weighted_colley_engine import WeightedColleyEngine
+from weighted_massey_engine import WeightedMasseyEngine
 
 DATABASE_FILEPATH = "football_data.sqlite"
 
@@ -64,7 +65,7 @@ def _fetch_data_for_transfermarkt_model():
 
     con = sqlite3.connect(DATABASE_FILEPATH)
 
-    query = f"""
+    query = """
     SELECT id AS match_id, season, league_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result, 
     market_average_home_win_odds AS home_odds, market_average_draw_odds AS draw_odds, market_average_away_win_odds AS away_odds,
     home.starters_purchase_val + home.bench_purchase_val AS homePurchaseVal,
@@ -105,21 +106,25 @@ def norm_odds_vectorized(data):
 
 @lru_cache(1)
 def fetch_data_for_massey_eos_eval():
+
     con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = """
     SELECT season, id AS match_id, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
     FROM Matches
+    WHERE league_id IN (1,2,3,4)
     """
 
     rankQuery = """
     SELECT season, league_id, team_id, ranking	
     FROM EOSStandings
+    WHERE league_id IN (1,2,3,4)
     """
 
     mvQuery = """
     SELECT season, league_id, team_id, avg_market_val
     FROM TeamMarketvalues
+    WHERE league_id IN (1,2,3,4)
     """
 
     Games = pd.read_sql_query(gamesQuery, con)
@@ -134,8 +139,8 @@ def fetch_data_for_massey_eos_eval():
 def fetch_data_for_colley_accuracy(season,league):
     con = sqlite3.connect(DATABASE_FILEPATH)
 
-    gamesQuery = f"""
-    SELECT id AS match_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
+    gamesQuery = """
+    SELECT id AS match_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, date
     FROM Matches
     WHERE season = @season
     AND league_id = @league
@@ -147,14 +152,70 @@ def fetch_data_for_colley_accuracy(season,league):
     away_goals_list = Games.loc[:,"fulltime_away_goals"]
     home_teams_list = Games.loc[:,'home_team_id']
     away_teams_list = Games.loc[:,'away_team_id']
+    date_list = Games.loc[:,'date']
 
     N = 8*len(home_goals_list)//10
     colley_ratings = WeightedColleyEngine.get_ratings(home_goals_list[:N],away_goals_list[:N],home_teams_list[:N],away_teams_list[:N])
 
-    dictionary = colley_ratings.set_index('team')['rating'].to_dict()
+    wtd_colley_ratings = WeightedColleyEngine.get_ratings(home_goals_list[:N],away_goals_list[:N],home_teams_list[:N],away_teams_list[:N], date_list[:N])
+    
+    c_dictionary = colley_ratings.set_index('team')['rating'].to_dict()
+    wc_dictionary = wtd_colley_ratings.set_index('team')['rating'].to_dict()
 
-    Games['home_team_colley'] = Games['home_team_id'].map(dictionary)
-    Games['away_team_colley'] = Games['away_team_id'].map(dictionary)
+    Games['home_team_colley'] = Games['home_team_id'].map(c_dictionary)
+    Games['away_team_colley'] = Games['away_team_id'].map(c_dictionary)
+
+    Games['home_team_wtd_colley'] = Games['home_team_id'].map(wc_dictionary)
+    Games['away_team_wtd_colley'] = Games['away_team_id'].map(wc_dictionary)
+    
+    Games = Games.iloc[N:]
+    Games.reset_index(drop=True, inplace=True)
+    Games['result'] = np.sign(Games["fulltime_home_goals"] - Games["fulltime_away_goals"]).astype(int)
+
+    return Games
+
+def fetch_data_for_massey_accuracy(season,league):
+    con = sqlite3.connect(DATABASE_FILEPATH)
+
+    gamesQuery = """
+    SELECT id AS match_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, fulltime_result
+    FROM Matches
+    WHERE season = @season
+    AND league_id = @league
+    """
+
+    mvQuery = """
+    SELECT season, league_id, team_id, avg_market_val
+    FROM TeamMarketvalues
+    WHERE season = @season
+    AND league_id = @league
+    """
+    
+    Games = pd.read_sql_query(gamesQuery, con, params={"season":season,"league":league})
+    avg_mv = pd.read_sql_query(mvQuery, con, params={"season":season,"league":league})
+
+    home_goals_list = Games.loc[:,"fulltime_home_goals"]
+    away_goals_list = Games.loc[:,"fulltime_away_goals"]
+    home_teams_list = Games.loc[:,'home_team_id']
+    away_teams_list = Games.loc[:,'away_team_id']
+    match_date_list = Games.loc[:,'date']
+    N = 8*len(home_goals_list)//10
+    m_ratings, _ = WeightedMasseyEngine.get_ratings(home_goals_list[:N], away_goals_list[:N],
+                                                                  home_teams_list[:N], away_teams_list[:N])
+    wm_ratings, home_advantage = WeightedMasseyEngine.get_ratings(home_goals_list[:N], away_goals_list[:N],
+                                                                  home_teams_list[:N], away_teams_list[:N],
+                                                                  match_date=match_date_list[:N], avg_mv=avg_mv)
+
+    m_dictionary = m_ratings.set_index('team')['rating'].to_dict()
+    wm_dictionary = wm_ratings.set_index('team')['mv_rating'].to_dict()
+
+    Games['home_team_massey'] = Games['home_team_id'].map(m_dictionary)
+    Games['away_team_massey'] = Games['away_team_id'].map(m_dictionary)
+
+    Games['home_team_wtd_massey'] = Games['home_team_id'].map(wm_dictionary)
+    Games['away_team_wtd_massey'] = Games['away_team_id'].map(wm_dictionary)
+
+    Games['home_team_wtd_massey'] += home_advantage
     
     Games = Games.iloc[N:]
     Games.reset_index(drop=True, inplace=True)

@@ -25,7 +25,9 @@ class WeightedMasseyModel(BaseModel):
         """
         Games, ranking, marketValues = fetch_data_for_massey_eos_eval()
 
-        pre_Games = Games.loc[Games['season'] < season, :]
+        pre_Games = Games.loc[(Games['season'] < season), :]
+        #pre_Games = Games.loc[(Games['season'] < season) & (Games['league_id'].isin(league_ids)), :]
+
         avg_mv = marketValues.loc[marketValues['season'] == season, :]
     
         # get WEIGHTED massey ratings using data before predict season
