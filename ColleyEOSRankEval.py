@@ -7,7 +7,7 @@ from scipy.stats import kendalltau
 import matplotlib.pyplot as plt
 
 from getData import fetch_data_for_massey_eos_eval
-from weighted_massey_engine import WeightedMasseyEngine
+from weighted_colley_engine import WeightedColleyEngine
 
 
 """ 
@@ -20,7 +20,7 @@ This is used to compare the end of season ranking prediction by league made with
 
 def ranking_eval(season):
     '''
-    Compute the Massey and Weighted Massey ratings based on matches data before predict season, then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
+    Compute the Colley and Weighted Massey Colley based on matches data before predict season, then compare it with true ranking using MAE and Spearman's rank correlation coefficient as metrics
 
     Input
     --------
@@ -28,8 +28,8 @@ def ranking_eval(season):
 
     Output
     --------
-        m_eval: a dataframe containing 1)MAE 2)Spearman 3)Kandall's tau evaluation result for the end of season ranking predictions by league using Massey method  
-        wm_eval: a dataframe containing 1)MAE 2)Spearman 3)Kandall's tau evaluation result for the end of season ranking predictions by league using Weighted Massey method  
+        c_eval: a dataframe containing 1)MAE 2)Spearman 3)Kandall's tau evaluation result for the end of season ranking predictions by league using Colley method  
+        wc_eval: a dataframe containing 1)MAE 2)Spearman 3)Kandall's tau evaluation result for the end of season ranking predictions by league using Weighted Colley method  
 
     '''
     Games, ranking, marketValues = fetch_data_for_massey_eos_eval()
@@ -37,32 +37,22 @@ def ranking_eval(season):
     EEOSR = ranking.loc[ranking['season']==season, :]
     pre_Matches = Games.loc[Games['season'] < season, :]
 
-    avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']] 
+    home_goals_list = pre_Matches.loc[:,"fulltime_home_goals"]
+    away_goals_list = pre_Matches.loc[:,"fulltime_away_goals"]
+    home_teams_list = pre_Matches.loc[:,'home_team_id']
+    away_teams_list = pre_Matches.loc[:,'away_team_id']
+    date_list = pre_Matches.loc[:,'date']
 
-    #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
-    avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']]
+    c_ratings = WeightedColleyEngine.get_ratings(home_goals_list,away_goals_list,home_teams_list,away_teams_list)
 
-    m_ratings, m_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
-                    goals_away=pre_Matches['fulltime_away_goals'], 
-                    teams_home=pre_Matches['home_team_id'],
-                    teams_away=pre_Matches['away_team_id'])
+    c_eval = evaluation(c_ratings, EEOSR)
 
-    m_eval = evaluation(m_ratings, EEOSR)
+    wc_ratings = WeightedColleyEngine.get_ratings(home_goals_list,away_goals_list,home_teams_list,away_teams_list, date_list)
 
-    wm_ratings, wm_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
-                                goals_away=pre_Matches['fulltime_away_goals'], 
-                                teams_home=pre_Matches['home_team_id'],
-                                teams_away=pre_Matches['away_team_id'],
-                                match_date=pre_Matches['date'],
-                                avg_mv=avg_mv)
-
-    # if uses massey rating in combination with market value
-    wm_ratings = wm_ratings.drop(columns=['rating'])
-    wm_ratings = wm_ratings.rename(columns={'mv_rating':'rating'})
-
-    wm_eval = evaluation(wm_ratings, EEOSR)
+    wc_eval = evaluation(wc_ratings, EEOSR)
     
-    return m_eval, wm_eval
+    return c_eval, wc_eval
+
 
 def evaluation (ratings, EEOSR):
     '''
@@ -112,6 +102,7 @@ def evaluation (ratings, EEOSR):
         eval.loc[league_id-1,'Kendall’s tau'] = tau
     return eval
 
+
 def plot_EOS():
     league_names = ['Premier League', 'Championship', 'League 1', 'League 2']
     league_colors = {
@@ -121,88 +112,90 @@ def plot_EOS():
         'League 2': 'purple'
     }
 
-    massey_data = pd.DataFrame()
-    wm_data = pd.DataFrame()
+    c_data = pd.DataFrame()
+    wc_data = pd.DataFrame()
     for season in range(2011,2024):
-        m_eval, wm_eval = ranking_eval(season)
-        m_eval['League'] = league_names
-        m_eval['Year'] = season
-        wm_eval['League'] = league_names
-        wm_eval['Year'] = season
+        c_eval, wc_eval = ranking_eval(season)
+        c_eval['League'] = league_names
+        c_eval['Year'] = season
+        wc_eval['League'] = league_names
+        wc_eval['Year'] = season
         
-        massey_data = pd.concat([massey_data, m_eval], axis=0)
-        wm_data = pd.concat([wm_data, wm_eval], axis=0)
+        c_data = pd.concat([c_data, c_eval], axis=0)
+        wc_data = pd.concat([wc_data, wc_eval], axis=0)
         
     
-    y_min = min(massey_data['Kendall’s tau'].min(), wm_data['Kendall’s tau'].min()) - 0.05
-    y_max = max(wm_data['Kendall’s tau'].max(), massey_data['Kendall’s tau'].max()) + 0.05
+    y_min = min(c_data['Kendall’s tau'].min(), wc_data['Kendall’s tau'].min()) - 0.05
+    y_max = max(wc_data['Kendall’s tau'].max(), c_data['Kendall’s tau'].max()) + 0.05
 
     # Plot the line graph
     plt.figure(figsize=(10, 6))
     for league in league_names:
-        league_data = massey_data[massey_data['League'] == league]
+        league_data = c_data[c_data['League'] == league]
         plt.plot(league_data['Year'], league_data['Kendall’s tau'], marker='o', label=league, color=league_colors[league])
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    plt.title('Kendall tau rank correlation of Massey Ranking from 2011-2023')
+    plt.title('Kendall tau rank correlation of Colley Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("massey_EOS_line.png")
+    plt.savefig("colley_EOS_line.png")
 
     plt.figure(figsize=(10, 6))
     for league in league_names:
-        league_data = wm_data[wm_data['League'] == league]
+        league_data = wc_data[wc_data['League'] == league]
         plt.plot(league_data['Year'], league_data['Kendall’s tau'], marker='o', label=league, color=league_colors[league])
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    plt.title('Kendall tau rank correlation of Weighted Massey Ranking from 2011-2023')
+    plt.title('Kendall tau rank correlation of Weighted Colley Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("weighted_massey_EOS_line.png")
+    plt.savefig("weighted_colley_EOS_line.png")
 
 
     # Plot bar graph
     # Calculate the average accuracy for each league
     custom_order = ['Premier League', 'Championship', 'League 1', 'League 2']
-    m_average_tau= massey_data.groupby('League')['Kendall’s tau'].mean().reset_index()
-    m_average_tau['League'] = pd.Categorical(m_average_tau['League'], categories=custom_order, ordered=True)
-    m_average_tau = m_average_tau.sort_values(by='League')
+    c_average_tau= c_data.groupby('League')['Kendall’s tau'].mean().reset_index()
+    c_average_tau['League'] = pd.Categorical(c_average_tau['League'], categories=custom_order, ordered=True)
+    c_average_tau = c_average_tau.sort_values(by='League')
 
-    wm_average_tau = wm_data.groupby('League')['Kendall’s tau'].mean().reset_index()
-    wm_average_tau['League'] = pd.Categorical(wm_average_tau['League'], categories=custom_order, ordered=True)
-    wm_average_tau = wm_average_tau.sort_values(by='League')
+    wc_average_tau = wc_data.groupby('League')['Kendall’s tau'].mean().reset_index()
+    wc_average_tau['League'] = pd.Categorical(wc_average_tau['League'], categories=custom_order, ordered=True)
+    wc_average_tau = wc_average_tau.sort_values(by='League')
 
-    y_max = max(m_average_tau['Kendall’s tau'].max(), wm_average_tau['Kendall’s tau'].max()) * 1.05
+    y_max = max(c_average_tau['Kendall’s tau'].max(), wc_average_tau['Kendall’s tau'].max()) * 1.05
 
     plt.figure(figsize=(10, 6))
-    plt.bar(m_average_tau['League'], m_average_tau['Kendall’s tau'], color=[league_colors[league] for league in m_average_tau['League']])
+    plt.bar(c_average_tau['League'], c_average_tau['Kendall’s tau'], color=[league_colors[league] for league in c_average_tau['League']])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    plt.title('Average Kendall\'s tau of Massey Model from 2011-2023')
+    plt.title('Average Kendall\'s tau of Colley Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig('massey_EOS_bar.png')
+    plt.savefig('colley_EOS_bar.png')
     #plt.show()
 
     plt.figure(figsize=(10, 6))
-    plt.bar(wm_average_tau['League'], wm_average_tau['Kendall’s tau'], color=[league_colors[league] for league in wm_average_tau['League']])
+    plt.bar(wc_average_tau['League'], wc_average_tau['Kendall’s tau'], color=[league_colors[league] for league in wc_average_tau['League']])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    plt.title('Average Kendall\'s tau of Weighted Massey Model from 2011-2023')
+    plt.title('Average Kendall\'s tau of Weighted Colley Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig('weighted_massey_EOS_bar.png')
+    plt.savefig('weighted_colley_EOS_bar.png')
+    #plt.show()
 
-    print(m_average_tau)
-    print(wm_average_tau)
+    print(c_average_tau)
+    print(wc_average_tau)
+    
 
 
 
