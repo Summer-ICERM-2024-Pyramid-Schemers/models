@@ -87,6 +87,7 @@ class WeightedColleyModel(BaseModel):
     @classmethod
     def getBrierScores(cls, season, league):
         pred_data = cls.getPredProb(season, league)
+        pred_data = pred_data.set_index("match_id")
         return super()._calc_brier_scores(pred_data)
     
     @classmethod

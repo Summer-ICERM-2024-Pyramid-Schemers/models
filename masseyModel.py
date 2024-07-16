@@ -78,7 +78,6 @@ class WeightedMasseyModel(BaseModel):
         # change 2011 to (earliest season + 1) if dataset is updated
         # Concatenate all collected DataFrames into a single DataFrame
         pre_data = pd.concat([cls.getModel(Year, None) for Year in range(2011, season)], ignore_index=True)
-
         model = OrderedModel(pre_data['result'],pre_data['rating_diff'],distr = 'probit')
         model = model.fit(method='bfgs')
 
@@ -88,12 +87,12 @@ class WeightedMasseyModel(BaseModel):
         predictions = [model.predict(i)[0] for i in pred_data["rating_diff"]]
         # Careful, the model.predict should return in the order of loss, draw, win...
         pred_data[["pred-loss","pred-draw","pred-win"]] = predictions
-        
         return pred_data
     
     @classmethod
     def getBrierScores(cls, season, league):
         pred_data = cls.getPredProb(season, league)
+        pred_data = pred_data.set_index("match_id")
         return super()._calc_brier_scores(pred_data)
     
     @classmethod
