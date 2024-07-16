@@ -140,7 +140,7 @@ def fetch_data_for_colley_accuracy(season,league):
     con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = """
-    SELECT id AS match_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
+    SELECT id AS match_id, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals, date
     FROM Matches
     WHERE season = @season
     AND league_id = @league
@@ -152,14 +152,21 @@ def fetch_data_for_colley_accuracy(season,league):
     away_goals_list = Games.loc[:,"fulltime_away_goals"]
     home_teams_list = Games.loc[:,'home_team_id']
     away_teams_list = Games.loc[:,'away_team_id']
+    date_list = Games.loc[:,'date']
 
     N = 8*len(home_goals_list)//10
     colley_ratings = WeightedColleyEngine.get_ratings(home_goals_list[:N],away_goals_list[:N],home_teams_list[:N],away_teams_list[:N])
 
-    dictionary = colley_ratings.set_index('team')['rating'].to_dict()
+    wtd_colley_ratings = WeightedColleyEngine.get_ratings(home_goals_list[:N],away_goals_list[:N],home_teams_list[:N],away_teams_list[:N], date_list[:N])
+    
+    c_dictionary = colley_ratings.set_index('team')['rating'].to_dict()
+    wc_dictionary = wtd_colley_ratings.set_index('team')['rating'].to_dict()
 
-    Games['home_team_colley'] = Games['home_team_id'].map(dictionary)
-    Games['away_team_colley'] = Games['away_team_id'].map(dictionary)
+    Games['home_team_colley'] = Games['home_team_id'].map(c_dictionary)
+    Games['away_team_colley'] = Games['away_team_id'].map(c_dictionary)
+
+    Games['home_team_wtd_colley'] = Games['home_team_id'].map(wc_dictionary)
+    Games['away_team_wtd_colley'] = Games['away_team_id'].map(wc_dictionary)
     
     Games = Games.iloc[N:]
     Games.reset_index(drop=True, inplace=True)

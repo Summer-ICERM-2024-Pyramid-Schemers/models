@@ -55,6 +55,12 @@ def plot_accuracy():
     # Calculate the average accuracy for each league
     average_massey_accuracies = massey_df.groupby('League')['Accuracy'].mean().reset_index()
     average_wm_accuracies = wm_df.groupby('League')['Accuracy'].mean().reset_index()
+    # Sort by league
+    custom_order = ['Premier League', 'Championship', 'League 1', 'League 2']
+    average_massey_accuracies['League'] = pd.Categorical(average_massey_accuracies['League'], categories=custom_order, ordered=True)
+    average_massey_accuracies = average_massey_accuracies.sort_values(by='League')
+    average_wm_accuracies['League'] = pd.Categorical(average_wm_accuracies['League'], categories=custom_order, ordered=True)
+    average_wm_accuracies = average_wm_accuracies.sort_values(by='League')
 
     y_min = massey_df['Accuracy'].min()*.98
     y_max = wm_df['Accuracy'].max()*1.02
@@ -64,27 +70,29 @@ def plot_accuracy():
     for league in league_names.values():
         league_data = massey_df[massey_df['League'] == league]
         plt.plot(league_data['Year'], league_data['Accuracy'], marker='o', label=league, color=league_colors[league])
-    plt.ylim(y_min, y_max)
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Accuracy (%)')
     plt.title('Accuracy of Massey Model from 2010-2023')
     plt.legend()
+    plt.ylim(0.43, 0.82)
+    plt.tight_layout()
     plt.grid(True)
-    plt.savefig("massey_accuracy_scatter.png")
+    plt.savefig("massey_accuracy_line.png")
 
     plt.figure(figsize=(10, 6))
     for league in league_names.values():
         league_data = wm_df[wm_df['League'] == league]
         plt.plot(league_data['Year'], league_data['Accuracy'], marker='o', label=league, color=league_colors[league])
-    plt.ylim(y_min, y_max)
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Accuracy (%)')
     plt.title('Accuracy of Weighted Massey Model from 2010-2023')
     plt.legend()
+    plt.ylim(0.43, 0.82)
+    plt.tight_layout()
     plt.grid(True)
-    plt.savefig("weighted_massey_accuracy_scatter.png")
+    plt.savefig("weighted_massey_accuracy_line.png")
 
     y_min = .5
     y_max = average_wm_accuracies['Accuracy'].max()*1.02
@@ -93,26 +101,29 @@ def plot_accuracy():
     plt.figure(figsize=(10, 6))
     plt.bar(average_massey_accuracies['League'], average_massey_accuracies['Accuracy'], color=[league_colors[league] for league in average_massey_accuracies['League']])
     # Set the y-axis range
-    plt.ylim(0.5, y_max)
+    plt.ylim(0.5, 0.73)
     # Add labels and title
     plt.xlabel('League')
     plt.ylabel('Average Accuracy (%)')
     plt.title('Average Accuracy of Massey Model from 2010-2023')
-    plt.xticks(rotation=45)
+    #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
     plt.savefig("massey_accuracy_bar.png")
 
     plt.figure(figsize=(10, 6))
     plt.bar(average_wm_accuracies['League'], average_wm_accuracies['Accuracy'], color=[league_colors[league] for league in average_wm_accuracies['League']])
     # Set the y-axis range
-    plt.ylim(0.5, y_max)
+    plt.ylim(0.5, 0.73)
     # Add labels and title
     plt.xlabel('League')
     plt.ylabel('Average Accuracy (%)')
     plt.title('Average Accuracy of Weighted Massey Model from 2010-2023')
-    plt.xticks(rotation=45)
+    #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
     plt.savefig("weighted_massey_accuracy_bar.png")
+
+    print(average_massey_accuracies)
+    print(average_wm_accuracies)
 
 if __name__ == "__main__":
     start = perf_counter()

@@ -143,6 +143,7 @@ def plot_EOS():
     plt.tight_layout()
     plt.grid(True)
     plt.savefig("colley_EOS_line.png")
+    plt.show()
 
     plt.figure(figsize=(10, 6))
     for league in league_names:
@@ -158,6 +159,8 @@ def plot_EOS():
     plt.tight_layout()
     plt.grid(True)
     plt.savefig("weighted_colley_EOS_line.png")
+    plt.show()
+
 
 
     # Plot bar graph
@@ -181,7 +184,7 @@ def plot_EOS():
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
     plt.savefig('colley_EOS_bar.png')
-    #plt.show()
+    plt.show()
 
     plt.figure(figsize=(10, 6))
     plt.bar(wc_average_tau['League'], wc_average_tau['Kendall’s tau'], color=[league_colors[league] for league in wc_average_tau['League']])
@@ -191,7 +194,7 @@ def plot_EOS():
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
     plt.savefig('weighted_colley_EOS_bar.png')
-    #plt.show()
+    plt.show()
 
     print(c_average_tau)
     print(wc_average_tau)
