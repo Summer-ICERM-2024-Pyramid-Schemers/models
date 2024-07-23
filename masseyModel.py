@@ -17,7 +17,7 @@ class WeightedMasseyModel(BaseModel):
     @cache
     def _get_model_by_season(cls, season):
         """ 
-        Function returns a dataframe which contains the game statistics of given season and league (if input includes a value league id, otherwise it returns stats of all games in that season)
+        Function returns a dataframe which contains the game statistics of given season and league (if input includes a valid league id, otherwise it returns stats of all games in that season)
             - one row of dataframe represents 1 game
             - each row also contains 
                 1) massey ratings of home and away team, which are calculated using data from all previous seasons

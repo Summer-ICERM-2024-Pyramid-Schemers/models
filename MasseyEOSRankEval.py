@@ -113,14 +113,10 @@ def evaluation (ratings, EEOSR):
     return eval
 
 def plot_EOS():
-    league_names = ['Premier League', 'Championship', 'League 1', 'League 2']
-    league_colors = {
-        'Premier League': 'blue',
-        'Championship': 'green',
-        'League 1': 'red',
-        'League 2': 'purple'
-    }
-
+    #league_names = ['Premier League', 'Championship', 'League 1', 'League 2']
+    league_names = ["Bundesliga","2. Bundesliga"]
+    #league_names = ['scottish-premiership', 'scottish-championship', 'scottish-league-one', 'scottish-league-two']
+    
     massey_data = pd.DataFrame()
     wm_data = pd.DataFrame()
     for season in range(2011,2024):
@@ -133,7 +129,7 @@ def plot_EOS():
         massey_data = pd.concat([massey_data, m_eval], axis=0)
         wm_data = pd.concat([wm_data, wm_eval], axis=0)
         
-    
+    '''
     y_min = min(massey_data['Kendall’s tau'].min(), wm_data['Kendall’s tau'].min()) - 0.05
     y_max = max(wm_data['Kendall’s tau'].max(), massey_data['Kendall’s tau'].max()) + 0.05
 
@@ -141,39 +137,42 @@ def plot_EOS():
     plt.figure(figsize=(10, 6))
     for league in league_names:
         league_data = massey_data[massey_data['League'] == league]
-        plt.plot(league_data['Year'], league_data['Kendall’s tau'], marker='o', label=league, color=league_colors[league])
+        #plt.plot(league_data['Year'], league_data['Kendall’s tau'], marker='o', label=league, color=league_colors[league])
+        plt.plot(league_data['Year'], league_data['Kendall’s tau'],label=league)
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    plt.title('Kendall tau rank correlation of Massey Ranking from 2011-2023')
+    plt.title('Kendall tau rank correlation of Scottish leagues Massey Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("massey_EOS_line.png")
+    plt.savefig("massey_EOS_SCOT_line.png")
     plt.show()
 
     plt.figure(figsize=(10, 6))
     for league in league_names:
         league_data = wm_data[wm_data['League'] == league]
-        plt.plot(league_data['Year'], league_data['Kendall’s tau'], marker='o', label=league, color=league_colors[league])
+        #plt.plot(league_data['Year'], league_data['Kendall’s tau'], marker='o', label=league, color=league_colors[league])
+        plt.plot(league_data['Year'], league_data['Kendall’s tau'],label=league)
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    plt.title('Kendall tau rank correlation of Weighted Massey Ranking from 2011-2023')
+    plt.title('Kendall tau rank correlation of Scottish Weighted Massey Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("weighted_massey_EOS_line.png")
+    plt.savefig("weighted_massey_GER_SCOT_line.png")
     plt.show()
-
+    '''
 
     # Plot bar graph
     # Calculate the average accuracy for each league
-    custom_order = ['Premier League', 'Championship', 'League 1', 'League 2']
+    #custom_order = ['Premier League', 'Championship', 'League 1', 'League 2']
+    custom_order = league_names
     m_average_tau= massey_data.groupby('League')['Kendall’s tau'].mean().reset_index()
     m_average_tau['League'] = pd.Categorical(m_average_tau['League'], categories=custom_order, ordered=True)
     m_average_tau = m_average_tau.sort_values(by='League')
@@ -181,31 +180,31 @@ def plot_EOS():
     wm_average_tau = wm_data.groupby('League')['Kendall’s tau'].mean().reset_index()
     wm_average_tau['League'] = pd.Categorical(wm_average_tau['League'], categories=custom_order, ordered=True)
     wm_average_tau = wm_average_tau.sort_values(by='League')
-
+    '''
     y_max = max(m_average_tau['Kendall’s tau'].max(), wm_average_tau['Kendall’s tau'].max()) * 1.05
 
     plt.figure(figsize=(10, 6))
-    plt.bar(m_average_tau['League'], m_average_tau['Kendall’s tau'], color=[league_colors[league] for league in m_average_tau['League']])
+    plt.bar(m_average_tau['League'], m_average_tau['Kendall’s tau'])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    plt.title('Average Kendall\'s tau of Massey Model from 2011-2023')
+    plt.title('Average Kendall\'s tau of Scottish leagues Massey Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig('massey_EOS_bar.png')
+    plt.savefig('massey_GER_SCOT_bar.png')
     plt.show()
 
     plt.figure(figsize=(10, 6))
-    plt.bar(wm_average_tau['League'], wm_average_tau['Kendall’s tau'], color=[league_colors[league] for league in wm_average_tau['League']])
+    plt.bar(wm_average_tau['League'], wm_average_tau['Kendall’s tau'])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    plt.title('Average Kendall\'s tau of Weighted Massey Model from 2011-2023')
+    plt.title('Average Kendall\'s tau of Scottish leagues Weighted Massey Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig('weighted_massey_EOS_bar.png')
+    plt.savefig('weighted_massey_SCOT_EOS_bar.png')
     plt.show()
+    '''
 
-    print(m_average_tau)
-    print(wm_average_tau)
+    return m_average_tau, wm_average_tau
 
 
 
