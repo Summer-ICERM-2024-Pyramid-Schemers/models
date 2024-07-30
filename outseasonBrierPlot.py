@@ -40,33 +40,36 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
             country = country.casefold()
         leagues = COUNTRY_TO_LEAGUES[country]
 
-    leagues = [ALL_LEAGUES[l-1] if isinstance(l,int) else l for l in leagues]
-    briers = {model: pd.DataFrame(index=seasons, columns=leagues) for model in ALL_MODELS}
-    
+    leagues = [ALL_LEAGUES[l-1] if isinstance(l, int) else l for l in leagues]
+    briers = {model: {league: [] for league in leagues} for model in ALL_MODELS}
 
+    year_briers = {model: pd.DataFrame(index=seasons, columns=leagues) for model in ALL_MODELS}
+
+    # Compute the Brier scores for all games across seasons and leagues
     for season in seasons:
         for league in leagues:
             # Get the list of DataFrames
             dataframes = getBrierScores(season, ALL_LEAGUES.index(league) + 1)
             
-            # Compute the mean Brier score for each DataFrame and store in the appropriate place in the dictionary
+            # Store all Brier scores for each model
             for df, model in zip(dataframes, ALL_MODELS):
-                mean_score = np.mean(df["brier_score"].to_list())
-                briers[model].loc[season, league] = mean_score
-    
-    summary = []
-    for model in ALL_MODELS:
-        model_means = []
-        for league in leagues:
-            model_means.append(np.mean(briers[model][league]))
-        summary.append(model_means)
-    summary = pd.DataFrame(summary, columns=leagues, index=ALL_MODELS)
+                brier_score = df["brier_score"].tolist()
+                briers[model][league].extend(brier_score)
+                year_briers[model].loc[season, league] = np.mean(brier_score)
+
+    # Compute the mean Brier scores for each model and league
+    summary_data = {
+        model: [np.mean(briers[model][league]) for league in leagues]
+        for model in ALL_MODELS
+    }
+
+    summary = pd.DataFrame(summary_data, index=leagues, columns=ALL_MODELS) 
 
     for model in ALL_MODELS:
         title = f"{model}"
         filename = f"{model}_outseason_brier_scores.png"
 
-        brier_data = briers[model]
+        brier_data = year_briers[model]
 
         brier_data.plot()
         plt.title(title, fontsize=20)
@@ -77,8 +80,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
         plt.tight_layout()
         plt.savefig(filename)
 
-
-    return summary
+    return summary, year_briers
 
 
 if __name__ == "__main__":
