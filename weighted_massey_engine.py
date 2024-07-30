@@ -60,6 +60,7 @@ class WeightedMasseyEngine:
         if avg_mv is not None:
             # apply box-cox transformation to normalize average market value, then standardize it to range (0,1)
             avg_mv = avg_mv.copy()
+            avg_mv.loc[avg_mv["avg_market_val"].isna(),"avg_market_val"] = avg_mv["avg_market_val"].min()/2
             transformed_mv, _ = stats.boxcox(avg_mv["avg_market_val"])
             #transformed_mv = transformed_mv.copy()
             avg_mv["transformed_mv"] = (transformed_mv - transformed_mv.min()) / (transformed_mv.max() - transformed_mv.min())
