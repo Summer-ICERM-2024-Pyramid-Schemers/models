@@ -6,7 +6,6 @@ from scipy.stats import spearmanr
 from scipy.stats import kendalltau
 import matplotlib.pyplot as plt
 
-from baseModel import ALL_LEAGUES, COUNTRY_TO_ADJECTIVES, COUNTRY_TO_LEAGUES
 from getData import fetch_data_for_massey_eos_eval
 from weighted_massey_engine import WeightedMasseyEngine
 
@@ -17,6 +16,7 @@ This is used to compare the end of season ranking prediction by league made with
     2) Spearman's rank correlation coefficient
     3) Kendall's tau rank correlation coefficient
 """
+
 
 def ranking_eval(season):
     '''
@@ -37,6 +37,9 @@ def ranking_eval(season):
     EEOSR = ranking.loc[ranking['season']==season, :]
     pre_Matches = Games.loc[Games['season'] < season, :]
 
+    avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']] 
+
+    #avg_mv = marketValues.loc[(marketValues['season'] == season) | (marketValues['season'] == season - 1), ['season', 'team_id', 'avg_market_val']]
     avg_mv = marketValues.loc[(marketValues['season'] == season-1), ['season', 'team_id', 'avg_market_val']]
 
     m_ratings, m_home_advantage = WeightedMasseyEngine.get_ratings(goals_home=pre_Matches['fulltime_home_goals'], 
@@ -61,7 +64,7 @@ def ranking_eval(season):
     
     return m_eval, wm_eval
 
-def evaluation(ratings, EEOSR):
+def evaluation (ratings, EEOSR):
     '''
     Input
     ---------
@@ -109,25 +112,24 @@ def evaluation(ratings, EEOSR):
         eval.loc[league_id-1,'Kendall’s tau'] = tau
     return eval
 
-def plot_EOS(country):
-    country = country.casefold() if isinstance(country,str) else country
-    league_ids = COUNTRY_TO_LEAGUES[country]
-    league_names = [ALL_LEAGUES[_id-1] for _id in league_ids]
+def plot_EOS():
+    #league_names = ['Premier League', 'Championship', 'League 1', 'League 2']
+    league_names = ["Bundesliga","2. Bundesliga"]
+    #league_names = ['scottish-premiership', 'scottish-championship', 'scottish-league-one', 'scottish-league-two']
     
-    massey_data = []
-    wm_data = []
+    massey_data = pd.DataFrame()
+    wm_data = pd.DataFrame()
     for season in range(2011,2024):
         m_eval, wm_eval = ranking_eval(season)
-        m_eval['League'] = ALL_LEAGUES
+        m_eval['League'] = league_names
         m_eval['Year'] = season
-        wm_eval['League'] = ALL_LEAGUES
+        wm_eval['League'] = league_names
         wm_eval['Year'] = season
-        massey_data.append(m_eval)
-        wm_data.append(wm_eval)
         
-    massey_data = pd.concat(massey_data, axis=0)
-    wm_data = pd.concat(wm_data, axis=0)
-    
+        massey_data = pd.concat([massey_data, m_eval], axis=0)
+        wm_data = pd.concat([wm_data, wm_eval], axis=0)
+        
+    '''
     y_min = min(massey_data['Kendall’s tau'].min(), wm_data['Kendall’s tau'].min()) - 0.05
     y_max = max(wm_data['Kendall’s tau'].max(), massey_data['Kendall’s tau'].max()) + 0.05
 
@@ -140,13 +142,14 @@ def plot_EOS(country):
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    plt.title(f'Kendall tau rank correlation of {COUNTRY_TO_ADJECTIVES[country]} leagues Massey Ranking from 2011-2023')
+    plt.title('Kendall tau rank correlation of Scottish leagues Massey Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(f"massey_{country}_EOS_line.png")
+    plt.savefig("massey_EOS_SCOT_line.png")
+    plt.show()
 
     plt.figure(figsize=(10, 6))
     for league in league_names:
@@ -156,49 +159,58 @@ def plot_EOS(country):
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    plt.title(f'Kendall tau rank correlation of {COUNTRY_TO_ADJECTIVES[country]} Weighted Massey Ranking from 2011-2023')
+    plt.title('Kendall tau rank correlation of Scottish Weighted Massey Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(f"weighted_massey_{country}_EOS_line.png")
+    plt.savefig("weighted_massey_GER_SCOT_line.png")
+    plt.show()
+    '''
 
     # Plot bar graph
     # Calculate the average accuracy for each league
+    #custom_order = ['Premier League', 'Championship', 'League 1', 'League 2']
     custom_order = league_names
-    m_average_tau = massey_data.loc[[l in league_names for l in massey_data['League']],:].groupby('League')['Kendall’s tau'].mean().reset_index()
+    m_average_tau= massey_data.groupby('League')['Kendall’s tau'].mean().reset_index()
     m_average_tau['League'] = pd.Categorical(m_average_tau['League'], categories=custom_order, ordered=True)
     m_average_tau = m_average_tau.sort_values(by='League')
 
-    wm_average_tau = wm_data.loc[[l in league_names for l in wm_data['League']],:].groupby('League')['Kendall’s tau'].mean().reset_index()
+    wm_average_tau = wm_data.groupby('League')['Kendall’s tau'].mean().reset_index()
     wm_average_tau['League'] = pd.Categorical(wm_average_tau['League'], categories=custom_order, ordered=True)
     wm_average_tau = wm_average_tau.sort_values(by='League')
-
+    '''
     y_max = max(m_average_tau['Kendall’s tau'].max(), wm_average_tau['Kendall’s tau'].max()) * 1.05
 
     plt.figure(figsize=(10, 6))
     plt.bar(m_average_tau['League'], m_average_tau['Kendall’s tau'])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    plt.title(f'Average Kendall\'s tau of {COUNTRY_TO_ADJECTIVES[country]} leagues Massey Model from 2011-2023')
+    plt.title('Average Kendall\'s tau of Scottish leagues Massey Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig(f'massey_{country}_EOS_bar.png')
+    plt.savefig('massey_GER_SCOT_bar.png')
+    plt.show()
 
     plt.figure(figsize=(10, 6))
     plt.bar(wm_average_tau['League'], wm_average_tau['Kendall’s tau'])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    plt.title(f'Average Kendall\'s tau of {COUNTRY_TO_ADJECTIVES[country]} leagues Weighted Massey Model from 2011-2023')
+    plt.title('Average Kendall\'s tau of Scottish leagues Weighted Massey Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig(f'weighted_massey_{country}_EOS_bar.png')
+    plt.savefig('weighted_massey_SCOT_EOS_bar.png')
+    plt.show()
+    '''
 
     return m_average_tau, wm_average_tau
 
 
+
+
+
 if __name__ == "__main__":
     start = perf_counter()
-    plot_EOS(country="england")
+    plot_EOS()
     print(perf_counter()-start)

@@ -142,7 +142,7 @@ class MasseyModel(WeightedMasseyModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    MasseyModel.plotBrierScores(country="england")
-    WeightedMasseyModel.plotBrierScores(country="england")
+    MasseyModel.plotBrierScores()
+    WeightedMasseyModel.plotBrierScores()
     end = perf_counter()
     print(end-start)

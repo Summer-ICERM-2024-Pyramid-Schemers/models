@@ -139,7 +139,7 @@ class ColleyModel(WeightedColleyModel):
 
 if __name__ == "__main__":
     start = perf_counter()
-    ColleyModel.plotBrierScores(country="england")
-    WeightedColleyModel.plotBrierScores(country="england")
+    ColleyModel.plotBrierScores()
+    WeightedColleyModel.plotBrierScores()
     end = perf_counter()
     print(end-start)

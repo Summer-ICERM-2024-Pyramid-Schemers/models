@@ -106,21 +106,25 @@ def norm_odds_vectorized(data):
 
 @lru_cache(1)
 def fetch_data_for_massey_eos_eval():
+
     con = sqlite3.connect(DATABASE_FILEPATH)
 
     gamesQuery = """
     SELECT season, id AS match_id, league_id, date, home_team_id, away_team_id, fulltime_home_goals, fulltime_away_goals
     FROM Matches
+    WHERE league_id IN (1, 2, 3, 4)
     """
 
     rankQuery = """
     SELECT season, league_id, team_id, ranking	
     FROM EOSStandings
+    WHERE league_id IN (1, 2, 3, 4)
     """
 
     mvQuery = """
     SELECT season, league_id, team_id, avg_market_val
     FROM TeamMarketvalues
+    WHERE league_id IN (1, 2, 3, 4)
     """
 
     Games = pd.read_sql_query(gamesQuery, con)
