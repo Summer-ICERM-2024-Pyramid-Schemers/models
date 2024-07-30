@@ -6,6 +6,7 @@ from scipy.stats import spearmanr
 from scipy.stats import kendalltau
 import matplotlib.pyplot as plt
 
+from baseModel import ALL_LEAGUES, COUNTRY_TO_ADJECTIVES, COUNTRY_TO_LEAGUES
 from getData import fetch_data_for_massey_eos_eval
 from weighted_colley_engine import WeightedColleyEngine
 
@@ -54,7 +55,7 @@ def ranking_eval(season):
     return c_eval, wc_eval
 
 
-def evaluation (ratings, EEOSR):
+def evaluation(ratings, EEOSR):
     '''
     Input
     ---------
@@ -103,25 +104,25 @@ def evaluation (ratings, EEOSR):
     return eval
 
 
-def plot_EOS():
-    #league_names = ['Premier League', 'Championship', 'League 1', 'League 2']
-    #league_names = ["Bundesliga","2. Bundesliga"]
-    league_names = ['scottish-premiership', 'scottish-championship', 'scottish-league-one', 'scottish-league-two']
+def plot_EOS(country):
+    country = country.casefold() if isinstance(country,str) else country
+    league_ids = COUNTRY_TO_LEAGUES[country]
+    league_names = [ALL_LEAGUES[_id-1] for _id in league_ids]
 
-
-    c_data = pd.DataFrame()
-    wc_data = pd.DataFrame()
+    c_data = []
+    wc_data = []
     for season in range(2011,2024):
         c_eval, wc_eval = ranking_eval(season)
-        c_eval['League'] = league_names
+        c_eval['League'] = ALL_LEAGUES
         c_eval['Year'] = season
-        wc_eval['League'] = league_names
+        wc_eval['League'] = ALL_LEAGUES
         wc_eval['Year'] = season
-        
-        c_data = pd.concat([c_data, c_eval], axis=0)
-        wc_data = pd.concat([wc_data, wc_eval], axis=0)
-        
-    '''
+        c_data.append(c_eval)
+        wc_data.append(wc_eval)
+
+    c_data = pd.concat(c_data, axis=0)
+    wc_data = pd.concat(wc_data, axis=0)
+    
     y_min = min(c_data['Kendall’s tau'].min(), wc_data['Kendall’s tau'].min()) - 0.05
     y_max = max(wc_data['Kendall’s tau'].max(), c_data['Kendall’s tau'].max()) + 0.05
 
@@ -134,16 +135,13 @@ def plot_EOS():
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    #plt.title('Kendall tau rank correlation of English leagues Colley Ranking from 2011-2023')
-    plt.title('Kendall tau rank correlation of German leagues Colley Ranking from 2011-2023')
+    plt.title(f'Kendall tau rank correlation of {COUNTRY_TO_ADJECTIVES[country]} leagues Colley Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("colley_GER_EOS_line.png")
-    plt.show()
-
+    plt.savefig(f"colley_{country}_EOS_line.png")
     plt.figure(figsize=(10, 6))
     for league in league_names:
         league_data = wc_data[wc_data['League'] == league]
@@ -152,63 +150,50 @@ def plot_EOS():
     # Add labels and title
     plt.xlabel('Year')
     plt.ylabel('Kendall’s tau')
-    #plt.title('Kendall tau rank correlation of English leagues Weighted Colley Ranking from 2011-2023')
-    plt.title('Kendall tau rank correlation of German leagues Weighted Colley Ranking from 2011-2023')
+    plt.title(f'Kendall tau rank correlation of {COUNTRY_TO_ADJECTIVES[country]} leagues Weighted Colley Ranking from 2011-2023')
     plt.legend()
     #plt.ylim(y_min, y_max)
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("weighted_colley_GER_EOS_line.png")
-    plt.show()
-    '''
-
+    plt.savefig(f"weighted_colley_{country}_EOS_line.png")
+    
     
     # Plot bar graph
     # Calculate the average accuracy for each league
-    #custom_order = ['Premier League', 'Championship', 'League 1', 'League 2']
     custom_order = league_names
-    c_average_tau= c_data.groupby('League')['Kendall’s tau'].mean().reset_index()
+    c_average_tau = c_data.loc[[l in league_names for l in c_data['League']],:].groupby('League')['Kendall’s tau'].mean().reset_index()
     c_average_tau['League'] = pd.Categorical(c_average_tau['League'], categories=custom_order, ordered=True)
     c_average_tau = c_average_tau.sort_values(by='League')
 
-    wc_average_tau = wc_data.groupby('League')['Kendall’s tau'].mean().reset_index()
+    wc_average_tau = wc_data.loc[[l in league_names for l in wc_data['League']],:].groupby('League')['Kendall’s tau'].mean().reset_index()
     wc_average_tau['League'] = pd.Categorical(wc_average_tau['League'], categories=custom_order, ordered=True)
     wc_average_tau = wc_average_tau.sort_values(by='League')
-    '''
+    
     y_max = max(c_average_tau['Kendall’s tau'].max(), wc_average_tau['Kendall’s tau'].max()) * 1.05
 
     plt.figure(figsize=(10, 6))
     plt.bar(c_average_tau['League'], c_average_tau['Kendall’s tau'])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    #plt.title('Average Kendall\'s tau of English leagues Colley Model from 2011-2023')
-    plt.title('Average Kendall\'s tau of German leagues Colley Model from 2011-2023')
+    plt.title(f'Average Kendall\'s tau of {COUNTRY_TO_ADJECTIVES[country]} leagues Colley Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig('colley_EOS_GER_bar.png')
-    plt.show()
+    plt.savefig(f'colley_{country}_EOS_bar.png')
 
     plt.figure(figsize=(10, 6))
     plt.bar(wc_average_tau['League'], wc_average_tau['Kendall’s tau'])
     plt.xlabel('League')
     plt.ylabel('Kendall\'s tau')
-    #plt.title('Average Kendall\'s tau of English leagues Weighted Colley Model from 2011-2023')
-    plt.title('Average Kendall\'s tau of German leagues Weighted Colley Model from 2011-2023')
+    plt.title(f'Average Kendall\'s tau of {COUNTRY_TO_ADJECTIVES[country]} leagues Weighted Colley Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig('weighted_colley_GER_EOS_bar.png')
-    plt.show()
-    '''
-    
+    plt.savefig(f'weighted_colley_{country}_EOS_bar.png')
+
     return c_average_tau, wc_average_tau
-    
-
-
-
 
 
 if __name__ == "__main__":
     start = perf_counter()
-    plot_EOS()
+    plot_EOS(country="england")
     print(perf_counter()-start)

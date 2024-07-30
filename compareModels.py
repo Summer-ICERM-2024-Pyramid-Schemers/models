@@ -10,6 +10,7 @@ from transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoal
 from masseyModel import MasseyModel, WeightedMasseyModel
 from colleyModel import ColleyModel, WeightedColleyModel
 
+
 def compareModels(getM1BrierScores, getM2BrierScores, country):
     """
     Returns a dataframe containing a list for each league and season.
@@ -155,7 +156,8 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country):
     [2] - A lower 95% confidence interval bound for Brier score difference
     [3] - An upper 95% confidence interval bound for Brier score difference
     """
-    
+
+
     if country.casefold() == "england":
         comparison = pd.DataFrame(columns=['Premier League','Championship','League One','League Two'])
         l1m1 = pd.DataFrame(columns=['match_id','brier_score'])
@@ -285,7 +287,6 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country):
 
 def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country):
     comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores, country)
-
     diffs = comparison.applymap(lambda x: x[0])
     pvalues = comparison.applymap(lambda x: x[1])
     lowerCI = comparison.applymap(lambda x: x[2])
@@ -300,20 +301,36 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
     df_combined['lower_error'] = np.abs(df_combined['Brier_Diff'] - lowerCI.stack().values)
     df_combined['upper_error'] = np.abs(upperCI.stack().values - df_combined['Brier_Diff'])
     # Plot points
-    sns.barplot(data=df_combined, x='League', y='Brier_Diff', color = 'blue')
+    plt.rcParams["font.family"] = "Verdana"
+    fig, ax = plt.subplots()
+    sns.barplot(data=df_combined, x='League', y='Brier_Diff', color = '#31C4ED')
     # Add error bars
     for league in df_combined['League'].unique():
         league_data = df_combined[df_combined['League'] == league]
-        plt.errorbar(league_data['League'], league_data['Brier_Diff'],
+        ax.errorbar(league_data['League'], league_data['Brier_Diff'],
                      yerr=[league_data['lower_error'], league_data['upper_error']],
                      fmt='none', capsize=5, alpha=1, linestyle='--', ecolor='red', elinewidth=3)
 
     # Customize the plot
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.title(f'Comparison of Brier Scores: {M1Title} - {M2Title}')
-    plt.xlabel('League')
-    plt.ylabel('Difference in Brier Score')
-    plt.ylim(-0.031,0)
+    #ax.axhline(y=0, color='r', linestyle='--')
+    ax.set_title(f'Comparison of Brier Scores: {M1Title} - {M2Title}')
+    ax.set_xlabel('League')
+    ax.set_ylabel('Difference in Brier Score')
+    ax.set_ylim(-0.031, 0)
+    #ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_color('#DDDDDD')
+    # Second, remove the ticks as well.
+    ax.tick_params(bottom=False, left=False)
+
+    # Third, add a horizontal grid (but keep the vertical grid hidden).
+    # Color the lines a light gray as well.
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(True, color='#EEEEEE')
+    ax.xaxis.grid(False)
+    fig.tight_layout()
+
     plt.savefig(M1Title + " - " + M2Title + " AGG")
 
     plt.show()
@@ -407,7 +424,7 @@ def plotSRAggregateComparison(getM1SuccessRatio, getM2SuccessRatio, M1Title, M2T
 
 # Odds - HA
 #plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "England")
-plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "England")
+#plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Null", "England")
 
 # Odds - TM1
 #plotComparison(BettingOddsModel.getBrierScores, TMModelOrderedProbit.getBrierScores, "Betting Odds", "Transfermarkt Model 1", "Germany")
@@ -423,7 +440,7 @@ plotAggregateComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierSc
 
 # TM2 - HA
 #plotComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage", "Germany")
-#plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Model 2", "Home Advantage", "England")
+plotAggregateComparison(TMModelOrderedProbitOLSGoalDiff.getBrierScores, HomeAdvModel.getBrierScores, "Transfermarkt Regression", "Null", "England")
 
 #plotSRAggregateComparison(BettingOddsModel.getSuccessRatio, HomeAdvModel.getSuccessRatio, "Betting Odds", "Home Advantage", "Germany")
 #plotSRAggregateComparison(TMModelOrderedProbit.getSuccessRatio, HomeAdvModel.getSuccessRatio, "Transfermarkt Model 1", "Home Advantage", "Germany")
