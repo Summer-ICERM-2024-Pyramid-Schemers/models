@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from time import perf_counter
 
-from getData import fetch_data_for_in_season_brier
-from baseModel import BaseModel
+from src.getData import fetch_data_for_in_season_brier
+from src.models.baseModel import BaseModel
 
 
 
@@ -128,7 +128,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
         plt.grid(True)
         plt.ylim(0.155, 0.235)
         plt.tight_layout()
-        plt.savefig(filename)
+        plt.savefig(f"images/{filename}")
     '''
 
     return summary

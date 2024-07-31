@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from time import perf_counter
 
-from oddsModel import BettingOddsModel
-from homeAdvModel import HomeAdvModel
-from transfermarktModel import TMModelOrderedProbit
-from masseyModel import MasseyModel, WeightedMasseyModel
-from colleyModel import ColleyModel, WeightedColleyModel
+from src.models.oddsModel import BettingOddsModel
+from src.models.homeAdvModel import HomeAdvModel
+from src.models.transfermarktModel import TMModelOrderedProbit
+from src.models.masseyModel import MasseyModel, WeightedMasseyModel
+from src.models.colleyModel import ColleyModel, WeightedColleyModel
 
 
 
@@ -78,7 +78,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
         plt.grid(True)
         plt.ylim(0.17, 0.225)
         plt.tight_layout()
-        plt.savefig(filename)
+        plt.savefig(f"images/{filename}")
 
     return summary, year_briers
 

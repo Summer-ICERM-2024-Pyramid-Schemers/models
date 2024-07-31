@@ -2,8 +2,8 @@ from time import perf_counter
 
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from baseModel import BaseModel
-from getData import getNonYearData, getYearData
+from .baseModel import BaseModel
+from ..getData import getNonYearData, getYearData
 
 
 class HomeAdvModel(BaseModel):

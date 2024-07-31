@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from getData import fetch_data_for_massey_accuracy
+from src.getData import fetch_data_for_massey_accuracy
 
 
 def get_accuracy(season,league):
@@ -78,7 +78,7 @@ def plot_accuracy():
     plt.ylim(0.43, 0.82)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("massey_accuracy_line.png")
+    plt.savefig("images/massey_accuracy_line.png")
 
     plt.figure(figsize=(10, 6))
     for league in league_names.values():
@@ -92,7 +92,7 @@ def plot_accuracy():
     plt.ylim(0.43, 0.82)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("weighted_massey_accuracy_line.png")
+    plt.savefig("images/weighted_massey_accuracy_line.png")
 
     y_min = .5
     y_max = average_wm_accuracies['Accuracy'].max()*1.02
@@ -108,7 +108,7 @@ def plot_accuracy():
     plt.title('Average Accuracy of Massey Model from 2010-2023')
     #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
-    plt.savefig("massey_accuracy_bar.png")
+    plt.savefig("images/massey_accuracy_bar.png")
 
     plt.figure(figsize=(10, 6))
     plt.bar(average_wm_accuracies['League'], average_wm_accuracies['Accuracy'], color=[league_colors[league] for league in average_wm_accuracies['League']])
@@ -120,7 +120,7 @@ def plot_accuracy():
     plt.title('Average Accuracy of Weighted Massey Model from 2010-2023')
     #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
-    plt.savefig("weighted_massey_accuracy_bar.png")
+    plt.savefig("images/weighted_massey_accuracy_bar.png")
 
     print(average_massey_accuracies)
     print(average_wm_accuracies)

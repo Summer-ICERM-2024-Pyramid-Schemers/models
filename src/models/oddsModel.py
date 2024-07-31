@@ -1,7 +1,7 @@
 from time import perf_counter
 
-from baseModel import BaseModel
-from getData import getYearData
+from .baseModel import BaseModel
+from ..getData import getYearData
 
 
 class BettingOddsModel(BaseModel):

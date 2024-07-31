@@ -78,7 +78,7 @@ class BaseModel(ABC):
         plt.ylabel("Brier Score")
         plt.grid(True)
 
-        plt.savefig(filename)
+        plt.savefig(f"images/{filename}")
         
     @classmethod
     @abstractmethod

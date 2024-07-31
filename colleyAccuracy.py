@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from getData import fetch_data_for_colley_accuracy
+from src.getData import fetch_data_for_colley_accuracy
 
 
 def get_accuracy(season,league):
@@ -71,7 +71,7 @@ def plot_accuracy():
     plt.grid(True)
     plt.ylim(0.43, 0.82)
     plt.tight_layout()
-    plt.savefig('colley_accuracy_line.png')
+    plt.savefig('images/colley_accuracy_line.png')
     plt.show()
 
     plt.figure(figsize=(10, 6))
@@ -86,7 +86,7 @@ def plot_accuracy():
     plt.ylim(0.43, 0.82)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("weighted_colley_accuracy_line.png")
+    plt.savefig("images/weighted_colley_accuracy_line.png")
     plt.show()
 
     # Plot the bar graph
@@ -98,7 +98,7 @@ def plot_accuracy():
     plt.title('Average Accuracy of Colley Model from 2010-2023')
     #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
-    plt.savefig("colley_accuracy_bar.png")
+    plt.savefig("images/colley_accuracy_bar.png")
     plt.show()
 
     plt.figure(figsize=(10, 6))
@@ -109,7 +109,7 @@ def plot_accuracy():
     plt.title('Average Accuracy of Colley Model from 2010-2023')
     #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
-    plt.savefig("weighted_colley_accuracy_bar.png")
+    plt.savefig("images/weighted_colley_accuracy_bar.png")
     plt.show()
 
     print(average_colley_accuracies)

@@ -3,8 +3,8 @@ from time import perf_counter
 import statsmodels.formula.api as smf
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from baseModel import BaseModel
-from getData import getNonYearData, getYearData
+from .baseModel import BaseModel
+from ..getData import getNonYearData, getYearData
 
 
 # An ordered probit model

@@ -1,13 +1,14 @@
 from functools import lru_cache
+import os.path
 import sqlite3
 
 import numpy as np
 import pandas as pd
 
-from weighted_colley_engine import WeightedColleyEngine
-from weighted_massey_engine import WeightedMasseyEngine
+from .weighted_colley_engine import WeightedColleyEngine
+from .weighted_massey_engine import WeightedMasseyEngine
 
-DATABASE_FILEPATH = "football_data.sqlite"
+DATABASE_FILEPATH = os.path.abspath(os.path.join(__file__,"../../data","football_data.sqlite"))
 
 
 def _prepare_data_for_transfermarkt_model(games_data: pd.DataFrame):

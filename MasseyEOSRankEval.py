@@ -6,9 +6,9 @@ from scipy.stats import spearmanr
 from scipy.stats import kendalltau
 import matplotlib.pyplot as plt
 
-from baseModel import ALL_LEAGUES, COUNTRY_TO_ADJECTIVES, COUNTRY_TO_LEAGUES
-from getData import fetch_data_for_massey_eos_eval
-from weighted_massey_engine import WeightedMasseyEngine
+from src.models.baseModel import ALL_LEAGUES, COUNTRY_TO_ADJECTIVES, COUNTRY_TO_LEAGUES
+from src.getData import fetch_data_for_massey_eos_eval
+from src.weighted_massey_engine import WeightedMasseyEngine
 
 
 """ 
@@ -146,7 +146,7 @@ def plot_EOS(country):
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(f"massey_{country}_EOS_line.png")
+    plt.savefig(f"images/massey_{country}_EOS_line.png")
 
     plt.figure(figsize=(10, 6))
     for league in league_names:
@@ -162,7 +162,7 @@ def plot_EOS(country):
     plt.ylim(-0.35, 0.75)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(f"weighted_massey_{country}_EOS_line.png")
+    plt.savefig(f"images/weighted_massey_{country}_EOS_line.png")
 
     # Plot bar graph
     # Calculate the average accuracy for each league
@@ -184,7 +184,7 @@ def plot_EOS(country):
     plt.title(f'Average Kendall\'s tau of {COUNTRY_TO_ADJECTIVES[country]} leagues Massey Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig(f'massey_{country}_EOS_bar.png')
+    plt.savefig(f'images/massey_{country}_EOS_bar.png')
 
     plt.figure(figsize=(10, 6))
     plt.bar(wm_average_tau['League'], wm_average_tau['Kendall’s tau'])
@@ -193,7 +193,7 @@ def plot_EOS(country):
     plt.title(f'Average Kendall\'s tau of {COUNTRY_TO_ADJECTIVES[country]} leagues Weighted Massey Model from 2011-2023')
     plt.ylim(0, y_max)
     plt.grid(True, axis='y')
-    plt.savefig(f'weighted_massey_{country}_EOS_bar.png')
+    plt.savefig(f'images/weighted_massey_{country}_EOS_bar.png')
 
     return m_average_tau, wm_average_tau
 
