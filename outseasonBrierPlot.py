@@ -1,9 +1,10 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from time import perf_counter
 
+from src.utils import ALL_LEAGUES, COUNTRY_TO_LEAGUES, DEFAULT_SEASONS, SKIP_FIRST_2_SEASONS, savefig_to_images_dir
 from src.models.oddsModel import BettingOddsModel
 from src.models.homeAdvModel import HomeAdvModel
 from src.models.transfermarktModel import TMModelOrderedProbit
@@ -11,14 +12,7 @@ from src.models.masseyModel import MasseyModel, WeightedMasseyModel
 from src.models.colleyModel import ColleyModel, WeightedColleyModel
 
 
-
-DEFAULT_SEASONS = range(2012,2024)
-# This list should be the names of the leagues as they should appear in plotting
-# This only works properly when the ids begin at 1 and have a consistent step of 1
-ALL_LEAGUES = ["Premier League","Championship","League One","League Two","Bundesliga","2. Bundesliga"]
-COUNTRY_TO_LEAGUES = {None:[1,2,3,4,5,6], "england":[1,2,3,4], "germany":[5,6]}
 ALL_MODELS = ['Massey', 'Weighted Massey', 'Colley', 'Weighted Colley', 'Null', 'Transfermarkt', 'Betting Odds']
-
 
 
 def getBrierScores(season, league):
@@ -34,7 +28,7 @@ def getBrierScores(season, league):
 
 
 
-def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filename=None, country=None):
+def plotBrierScores(*, seasons=SKIP_FIRST_2_SEASONS, leagues=None, title=None, filename=None, country=None):
     if leagues is None:
         if isinstance(country,str):
             country = country.casefold()
@@ -78,7 +72,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
         plt.grid(True)
         plt.ylim(0.17, 0.225)
         plt.tight_layout()
-        plt.savefig(f"images/{filename}")
+        savefig_to_images_dir(filename)
 
     return summary, year_briers
 

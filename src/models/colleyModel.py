@@ -1,15 +1,16 @@
 from functools import cache
-from time import perf_counter
 
 import pandas as pd
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 from .baseModel import BaseModel
 from ..getData import fetch_data_for_massey_eos_eval
+from ..utils import SKIP_FIRST_2_SEASONS
 from ..weighted_colley_engine import WeightedColleyEngine
 
 
 class WeightedColleyModel(BaseModel):
+    _plot_seasons = SKIP_FIRST_2_SEASONS
     _plot_title = "Weighted Colley Brier Score by Season and League"
     _plot_filename = "wtd_colley_brier_scores.png"
 
@@ -89,10 +90,7 @@ class WeightedColleyModel(BaseModel):
         pred_data = cls.getPredProb(season, league)
         pred_data = pred_data.set_index("match_id")
         return super()._calc_brier_scores(pred_data)
-    
-    @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
-        return super().plotBrierScores(seasons=seasons, **kwargs)
+
 
 class ColleyModel(WeightedColleyModel):
     _plot_title = "Colley Brier Score by Season and League"
@@ -135,11 +133,3 @@ class ColleyModel(WeightedColleyModel):
         Year_Games['rating_diff'] = Year_Games['home_rating'] - Year_Games['away_rating']
 
         return Year_Games
-
-
-if __name__ == "__main__":
-    start = perf_counter()
-    ColleyModel.plotBrierScores(country="england")
-    WeightedColleyModel.plotBrierScores(country="england")
-    end = perf_counter()
-    print(end-start)

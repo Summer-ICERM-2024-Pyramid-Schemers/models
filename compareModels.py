@@ -4,6 +4,7 @@ import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 
+from src.utils import savefig_to_images_dir
 from src.models.oddsModel import BettingOddsModel
 from src.models.homeAdvModel import HomeAdvModel
 from src.models.transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
@@ -140,7 +141,7 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country
     plt.xlabel('Season')
     plt.ylabel('Difference in Brier Score')
     plt.legend(title='League')
-    plt.savefig(f"images/{M1Title} - {M2Title}")
+    savefig_to_images_dir(f"{M1Title} - {M2Title}")
 
     plt.show()
 
@@ -331,7 +332,7 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
     ax.xaxis.grid(False)
     fig.tight_layout()
 
-    plt.savefig(f"images/{M1Title} - {M2Title} AGG")
+    savefig_to_images_dir(f"{M1Title} - {M2Title} AGG")
 
     plt.show()
 
@@ -418,7 +419,7 @@ def plotSRAggregateComparison(getM1SuccessRatio, getM2SuccessRatio, M1Title, M2T
     plt.title(f'Comparison of Success Ratios: {M1Title} - {M2Title}')
     plt.xlabel('League')
     plt.ylabel('Difference in Success Ratios')
-    plt.savefig(f"images/{M1Title} - {M2Title} AGG")
+    savefig_to_images_dir(f"{M1Title} - {M2Title} AGG")
 
     plt.show()
 
