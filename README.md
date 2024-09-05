@@ -40,7 +40,7 @@ Subclasses should override `BaseModel.getBrierScores` and `BaseModel.getSuccessR
 
 ## HomeAdvantage (Null)
 
-The HomeAdvantage model only considers home advantage in its predictions and nothing else. As such, it is the worst model and is our baseline to compare against.
+The HomeAdvantage model only considers home advantage in its predictions and nothing else. As such, it is the most naive model and is our baseline to compare against.
 
 The model class is stored in "src/models/homeAdvModel.py"
 
