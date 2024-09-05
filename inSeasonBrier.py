@@ -4,23 +4,17 @@ import matplotlib.pyplot as plt
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from time import perf_counter
 
-from getData import fetch_data_for_in_season_brier
-from baseModel import BaseModel
+from src.getData import fetch_data_for_in_season_brier
+from src.utils import ALL_LEAGUES, COUNTRY_TO_LEAGUES, DEFAULT_SEASONS, savefig_to_images_dir
+from src.models.baseModel import BaseModel
 
 
-
-DEFAULT_SEASONS = range(2010,2024)
-# This list should be the names of the leagues as they should appear in plotting
-# This only works properly when the ids begin at 1 and have a consistent step of 1
-ALL_LEAGUES = ["Premier League","Championship","League One","League Two","Bundesliga","2. Bundesliga", 'scottish-premiership', 'scottish-championship', 'scottish-league-one', 'scottish-league-two']
-COUNTRY_TO_LEAGUES = {None:[1,2,3,4,5,6,7,8,9,10], "england":[1,2,3,4], "germany":[5,6], "scotland": [7,8,9,10]}
 #ALL_MODELS = ['Massey', 'Weighted Massey', 'Colley', 'Weighted Colley', 'Null', 'Transfermarkt', 'Betting Odds']
 ALL_MODELS = ['Massey', 'Colley', 'Weighted Colley', 'Null', 'Betting Odds']
 
 
-
 def getPredProb(season, league): 
-    rank_games_80, rank_games_20, tmk_games_80, tmk_games_20  = fetch_data_for_in_season_brier(season, league)
+    rank_games_80, rank_games_20, tmk_games_80, tmk_games_20 = fetch_data_for_in_season_brier(season, league)
     # Masssey
     massey_model = OrderedModel(rank_games_80['result'],rank_games_80['massey_diff'],distr='probit')
     massey_model = massey_model.fit(method='bfgs')
@@ -68,7 +62,6 @@ def getPredProb(season, league):
     return massey_pred, colley_pred, wtd_colley_pred, home_pred, odds
 
 
-
 def getBrierScores(season, league):
     #massey_pred, wtd_massey_pred, colley_pred, wtd_colley_pred, home_pred, market_pred, odds = getPredProb(season, league)
     massey_pred, colley_pred, wtd_colley_pred, home_pred, odds = getPredProb(season, league)
@@ -83,8 +76,6 @@ def getBrierScores(season, league):
 
     #return massey_brier, wtd_massey_brier, colley_brier, wtd_colley_brier, home_brier, market_brier, odds_brier
     return massey_brier, colley_brier, wtd_colley_brier, home_brier, odds_brier
-
-
 
 
 def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filename=None, country=None):
@@ -104,7 +95,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
             
             # Compute the mean Brier score for each DataFrame and store in the appropriate place in the dictionary
             for df, model in zip(dataframes, ALL_MODELS):
-                mean_score = np.mean(df["brier_score"].to_list())
+                mean_score = np.mean(df["brier_score"])
                 briers[model].loc[season, league] = mean_score
     
     summary = []
@@ -114,7 +105,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
             model_means.append(np.mean(briers[model][league]))
         summary.append(model_means)
     summary = pd.DataFrame(summary, columns=leagues, index=ALL_MODELS)
-    '''
+    
     for model in ALL_MODELS:
         title = f"{model} In Season Brier Scores"
         filename = f"{model}_inseason_brier_scores.png"
@@ -128,8 +119,7 @@ def plotBrierScores(*, seasons=DEFAULT_SEASONS, leagues=None, title=None, filena
         plt.grid(True)
         plt.ylim(0.155, 0.235)
         plt.tight_layout()
-        plt.savefig(filename)
-    '''
+        savefig_to_images_dir(f"{filename}")
 
     return summary
 

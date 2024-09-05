@@ -4,15 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-DEFAULT_SEASONS = range(2010,2024)
-# This list should be the names of the leagues as they should appear in plotting
-# This only works properly when the ids begin at 1 and have a consistent step of 1
-ALL_LEAGUES = ["Premier League","Championship","League One","League Two","Bundesliga","2. Bundesliga","Scottish Premiership","Scottish Championship", "Scottish League One", "Scottish League Two"]
-COUNTRY_TO_LEAGUES = {None:[1,2,3,4,5,6,7,8,9,10], "england":[1,2,3,4], "germany":[5,6], "scotland":[7,8,9,10]}
-COUNTRY_TO_ADJECTIVES = {"england":"English", "germany":"German", "scotland":"Scottish"}
+from ..utils import ALL_LEAGUES, COUNTRY_TO_LEAGUES, DEFAULT_SEASONS, savefig_to_images_dir
 
 
 class BaseModel(ABC):
+    _plot_seasons = None
     _plot_title = None
     _plot_filename = None
 
@@ -56,10 +52,12 @@ class BaseModel(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def plotBrierScores(cls, *, seasons=DEFAULT_SEASONS, leagues=None, title=None, filename=None, country=None):
+    def plotBrierScores(cls, *, seasons=None, leagues=None, title=None, filename=None, country=None):
         """
         Plots Brier scores from all leagues and seasons.
         """
+        if seasons is None:
+            seasons = cls._plot_seasons or DEFAULT_SEASONS
         if leagues is None:
             if isinstance(country,str):
                 country = country.casefold()
@@ -78,7 +76,7 @@ class BaseModel(ABC):
         plt.ylabel("Brier Score")
         plt.grid(True)
 
-        plt.savefig(filename)
+        savefig_to_images_dir(filename)
         
     @classmethod
     @abstractmethod

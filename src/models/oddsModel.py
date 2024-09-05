@@ -1,7 +1,5 @@
-from time import perf_counter
-
-from baseModel import BaseModel
-from getData import getYearData
+from .baseModel import BaseModel
+from ..getData import getYearData
 
 
 class BettingOddsModel(BaseModel):
@@ -37,10 +35,3 @@ class BettingOddsModel(BaseModel):
         """
         finalTable = getYearData(season, league)
         return super()._calc_success_ratio(finalTable,["iOdds","drawOdds","jOdds"])
-
-
-if __name__ == "__main__":
-    start = perf_counter()
-    BettingOddsModel.plotBrierScores(country="germany")
-    end = perf_counter()
-    print(end-start)

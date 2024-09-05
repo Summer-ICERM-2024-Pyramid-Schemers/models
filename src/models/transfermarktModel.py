@@ -1,15 +1,15 @@
-from time import perf_counter
-
 import statsmodels.formula.api as smf
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from baseModel import BaseModel
-from getData import getNonYearData, getYearData
+from .baseModel import BaseModel
+from ..getData import getNonYearData, getYearData
+from ..utils import SKIP_FIRST_2_SEASONS
 
 
 # An ordered probit model
 class TMModelOrderedProbit(BaseModel):
-    _plot_title = "Transfer Market Brier Score by Season and League"
+    _plot_seasons = SKIP_FIRST_2_SEASONS
+    _plot_title = "TM Regression Brier Score by Season and League"
     _plot_filename = "TMModel1.png"
 
     @classmethod
@@ -64,15 +64,12 @@ class TMModelOrderedProbit(BaseModel):
         model = cls.getModel(season, league)
         data[["pred-loss","pred-draw","pred-win"]] = model.predict(data[['Home','Value']])
         return super()._calc_success_ratio(data)
-    
-    @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
-        return super().plotBrierScores(seasons=seasons, **kwargs)
 
 
 # An ordered probit model trained on an OLS goal difference model
 class TMModelOrderedProbitOLSGoalDiff(BaseModel):
-    _plot_title = "Transfer Market Brier Score by Season and League"
+    _plot_seasons = SKIP_FIRST_2_SEASONS
+    _plot_title = "TM Regression OLS Brier Score by Season and League"
     _plot_filename = "TMModel2.png"
 
     @classmethod
@@ -119,10 +116,6 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_brier_scores(data)
-    
-    @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
-        return super().plotBrierScores(seasons=seasons, **kwargs)
 
     @classmethod
     def getSuccessRatio(cls, season, league):
@@ -145,11 +138,3 @@ class TMModelOrderedProbitOLSGoalDiff(BaseModel):
 
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_success_ratio(data)
-
-
-if __name__ == "__main__":
-    start = perf_counter()
-    TMModelOrderedProbit.plotBrierScores(country="england")
-    TMModelOrderedProbitOLSGoalDiff.plotBrierScores(country="england")
-    end = perf_counter()
-    print(end-start)

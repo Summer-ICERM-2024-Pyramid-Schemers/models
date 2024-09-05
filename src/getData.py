@@ -1,13 +1,14 @@
 from functools import lru_cache
+import os.path
 import sqlite3
 
 import numpy as np
 import pandas as pd
 
-from weighted_colley_engine import WeightedColleyEngine
-from weighted_massey_engine import WeightedMasseyEngine
+from .weighted_colley_engine import WeightedColleyEngine
+from .weighted_massey_engine import WeightedMasseyEngine
 
-DATABASE_FILEPATH = "football_data.sqlite"
+DATABASE_FILEPATH = os.path.abspath(os.path.join(__file__,"../../data","football_data.sqlite"))
 
 
 def _prepare_data_for_transfermarkt_model(games_data: pd.DataFrame):
@@ -220,7 +221,7 @@ def fetch_data_for_massey_accuracy(season,league):
     return Games
 
 
-def fetch_data_for_in_season_brier(season, league):
+def fetch_data_for_in_season_brier(season, league, *, exclude_team_ids=[]):
     '''
     return 1) first 80% data in each season for transfermarkt models & rank models
             2) last 20% for evaluation
@@ -265,19 +266,11 @@ def fetch_data_for_in_season_brier(season, league):
     tmk_games = pd.read_sql_query(tmkQuery, con)
     tmk_games = tmk_games.query(f'season == {season} and league_id == {league}').copy()
 
-    # exclud top teams 
-    top_teams=[129, 130]
-    #top_teams = [93, 94, 95]
 
-
-    rank_mask = ~((rank_games['home_team_id'].isin(top_teams)) | (rank_games['away_team_id'].isin(top_teams)))
+    rank_mask = ~((rank_games['home_team_id'].isin(exclude_team_ids)) | (rank_games['away_team_id'].isin(exclude_team_ids)))
     rank_games = rank_games.loc[rank_mask, :].copy()
-    tmk_mask = ~((tmk_games['home_team_id'].isin(top_teams)) | (tmk_games['away_team_id'].isin(top_teams)))
+    tmk_mask = ~((tmk_games['home_team_id'].isin(exclude_team_ids)) | (tmk_games['away_team_id'].isin(exclude_team_ids)))
     tmk_games = tmk_games.loc[tmk_mask, :].copy()
-    '''
-    rank_games = rank_games[~((rank_games['home_team_id'].isin(top_teams)) | (rank_games['away_team_id'].isin(top_teams)))]
-    tmk_games = tmk_games[~((rank_games['home_team_id'].isin(top_teams)) | (tmk_games['away_team_id'].isin(top_teams)))]
-    '''
 
     rank_games['result'] = np.sign(rank_games["fulltime_home_goals"] - rank_games["fulltime_away_goals"]).astype(int)
 

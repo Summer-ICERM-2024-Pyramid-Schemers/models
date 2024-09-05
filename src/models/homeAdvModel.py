@@ -1,12 +1,12 @@
-from time import perf_counter
-
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-from baseModel import BaseModel
-from getData import getNonYearData, getYearData
+from .baseModel import BaseModel
+from ..getData import getNonYearData, getYearData
+from ..utils import SKIP_FIRST_2_SEASONS
 
 
 class HomeAdvModel(BaseModel):
+    _plot_seasons = SKIP_FIRST_2_SEASONS
     _plot_title = "Home Advantage Brier Score by Season and League"
     _plot_filename = "HAModel.png"
 
@@ -65,14 +65,3 @@ class HomeAdvModel(BaseModel):
         # Careful, the model.predict should return in the order of loss, draw, win...
         data[["pred-loss","pred-draw","pred-win"]] = predictions
         return super()._calc_success_ratio(data)
-
-    @classmethod
-    def plotBrierScores(cls, seasons=range(2012,2024), **kwargs):
-        return super().plotBrierScores(seasons=seasons, **kwargs)
-
-
-if __name__ == "__main__":
-    start = perf_counter()
-    HomeAdvModel.plotBrierScores(country="scotland")
-    end = perf_counter()
-    print(end-start)
