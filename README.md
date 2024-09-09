@@ -8,7 +8,14 @@ The data for this project is compiled by [football-data-scraping](https://github
 
 1. Ensure a recent version of Python3 is installed.
 2. Clone this repository and cd into the folder.
-3. Install the modules using `pip`. Depending on your python installation, the command might be `pip install -r requirements.txt` or `python3 -m pip install -r requirements.txt`.
+3. Optionally, create a virtual environment. This can keep packages more organized and avoid version incompatibilities. There are many ways to make a virtual environment. One way (on Windows) is:
+   ```
+   cmd
+   python -m venv venv
+   venv\Scripts\activate.bat
+   ```
+   Make sure to run the following step and all code inside the active virtual environment.
+4. Install the modules using `pip`. Depending on your python installation, the command might be `pip install -r requirements.txt` or `python3 -m pip install -r requirements.txt`.
 
 ## Usage
 

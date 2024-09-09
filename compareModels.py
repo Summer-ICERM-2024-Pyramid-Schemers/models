@@ -1,10 +1,11 @@
+from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 
-from src.utils import savefig_to_images_dir
+from src.utils import ALL_LEAGUES, COUNTRY_TO_LEAGUES, SKIP_FIRST_2_SEASONS, savefig_to_images_dir
 from src.models.oddsModel import BettingOddsModel
 from src.models.homeAdvModel import HomeAdvModel
 from src.models.transfermarktModel import TMModelOrderedProbit, TMModelOrderedProbitOLSGoalDiff
@@ -41,27 +42,27 @@ def compareModels(getM1BrierScores, getM2BrierScores, country):
             b1 = getM1BrierScores(season, 1)
             b2 = getM2BrierScores(season, 1)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            prem = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            prem = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 2)
             b2 = getM2BrierScores(season, 2)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            Ch = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            Ch = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 3)
             b2 = getM2BrierScores(season, 3)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            l1 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            l1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 4)
             b2 = getM2BrierScores(season, 4)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            l2 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            l2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             comparison = pd.concat([pd.DataFrame([[season, prem, Ch, l1, l2]], 
                                             columns=comparison.columns), comparison], 
                                             ignore_index=True)
@@ -69,15 +70,15 @@ def compareModels(getM1BrierScores, getM2BrierScores, country):
             b1 = getM1BrierScores(season, 5)
             b2 = getM2BrierScores(season, 5)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            bund1 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            bund1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 6)
             b2 = getM2BrierScores(season, 6)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            bund2 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            bund2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             comparison = pd.concat([pd.DataFrame([[season, bund1, bund2]], 
                                             columns=comparison.columns), comparison], 
                                             ignore_index=True)
@@ -85,27 +86,27 @@ def compareModels(getM1BrierScores, getM2BrierScores, country):
             b1 = getM1BrierScores(season, 7)
             b2 = getM2BrierScores(season, 7)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            prem = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            prem = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 8)
             b2 = getM2BrierScores(season, 8)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            Ch = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            Ch = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 9)
             b2 = getM2BrierScores(season, 9)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            l1 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            l1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             b1 = getM1BrierScores(season, 10)
             b2 = getM2BrierScores(season, 10)
             brier = b1.join(b2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-            ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+            ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
             ci = ttest.confidence_interval()
-            l2 = [np.mean(brier['brier_score_left'].tolist()) - np.mean(brier['brier_score_right'].tolist()), ttest[1], ci[0], ci[1]]
+            l2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
             comparison = pd.concat([pd.DataFrame([[season, prem, Ch, l1, l2]], 
                                             columns=comparison.columns), comparison], 
                                             ignore_index=True)
@@ -143,9 +144,8 @@ def plotComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country
     plt.legend(title='League')
     savefig_to_images_dir(f"{M1Title} - {M2Title}")
 
-    plt.show()
 
-def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country):
+def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country:str):
     """
     Returns a data frame with a column for each league, with a list containing aggregate data
 
@@ -158,140 +158,30 @@ def compareModelsAggregate(getM1BrierScores, getM2BrierScores, country):
     [3] - An upper 95% confidence interval bound for Brier score difference
     """
 
+    holding_lst = []
+    SEASONS = SKIP_FIRST_2_SEASONS
+    league_nums = COUNTRY_TO_LEAGUES[country.casefold()]
+    for league_num in league_nums:
+        m1 = pd.concat(getM1BrierScores(season, league_num) for season in SEASONS)
+        m2 = pd.concat(getM2BrierScores(season, league_num) for season in SEASONS)
 
-    if country.casefold() == "england":
-        comparison = pd.DataFrame(columns=['Premier League','Championship','League One','League Two'])
-        l1m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l2m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l3m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l4m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l1m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l2m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l3m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l4m2 = pd.DataFrame(columns=['match_id','brier_score'])
-    elif country.casefold() == "germany":
-        comparison = pd.DataFrame(columns=['Bundesliga', '2. Bundesliga'])
-        l5m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l5m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l6m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l6m2 = pd.DataFrame(columns=['match_id','brier_score'])
-    elif country.casefold() == "scotland":
-        comparison = pd.DataFrame(columns=['Premiership','Championship','League One','League Two'])
-        l7m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l8m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l9m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l10m1 = pd.DataFrame(columns=['match_id','brier_score'])
-        l7m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l8m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l9m2 = pd.DataFrame(columns=['match_id','brier_score'])
-        l10m2 = pd.DataFrame(columns=['match_id','brier_score'])
-    else:
-        raise Exception("Invalid country")
-    
-    if country.casefold() == 'england':
-        for season in range(2012, 2024, 1):
-            l1m1 = l1m1.append(getM1BrierScores(season, 1))
-            l1m2 = l1m2.append(getM2BrierScores(season, 1))
-
-            l2m1 = l2m1.append(getM1BrierScores(season, 2))
-            l2m2 = l2m2.append(getM2BrierScores(season, 2))
-
-            l3m1 = l3m1.append(getM1BrierScores(season, 3))
-            l3m2 = l3m2.append(getM2BrierScores(season, 3))
-
-            l4m1 = l4m1.append(getM1BrierScores(season, 4))
-            l4m2 = l4m2.append(getM2BrierScores(season, 4))
-
-        brier = l1m1.join(l1m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
+        brier = m1.join(m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
+        ttest = stats.ttest_rel(brier['brier_score_left'],brier['brier_score_right'])
         ci = ttest.confidence_interval()
-        prem = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
+        data = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
+        
+        holding_lst.append(data)
 
-        brier = l2m1.join(l2m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        Ch = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        brier = l3m1.join(l3m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        l1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        brier = l4m1.join(l4m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        l2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        comparison = pd.concat([pd.DataFrame([[prem, Ch, l1, l2]], 
-                                            columns=comparison.columns), comparison], 
-                                            ignore_index=True)
-    elif country.casefold() == 'germany':
-        for season in range(2012, 2024, 1):
-            l5m1 = l5m1.append(getM1BrierScores(season, 5))
-            l5m2 = l5m2.append(getM2BrierScores(season, 5))
-
-            l6m1 = l6m1.append(getM1BrierScores(season, 6))
-            l6m2 = l6m2.append(getM2BrierScores(season, 6))
-
-        brier = l5m1.join(l5m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        bund1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        brier = l6m1.join(l6m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        bund2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        comparison = pd.concat([pd.DataFrame([[bund1, bund2]],
-                                            columns=comparison.columns), comparison], 
-                                            ignore_index=True)
-    elif country.casefold() == 'scotland':
-        for season in range(2012, 2024, 1):
-            l7m1 = l7m1.append(getM1BrierScores(season, 7))
-            l7m2 = l7m2.append(getM2BrierScores(season, 7))
-
-            l8m1 = l8m1.append(getM1BrierScores(season, 8))
-            l8m2 = l8m2.append(getM2BrierScores(season, 8))
-
-            l9m1 = l9m1.append(getM1BrierScores(season, 9))
-            l9m2 = l9m2.append(getM2BrierScores(season, 9))
-
-            l10m1 = l10m1.append(getM1BrierScores(season, 10))
-            l10m2 = l10m2.append(getM2BrierScores(season, 10))
-
-        brier = l7m1.join(l7m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        prem = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        brier = l8m1.join(l8m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        Ch = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        brier = l9m1.join(l9m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        l1 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        brier = l10m1.join(l10m2.set_index('match_id'), on = "match_id", how = "inner",  lsuffix='_left', rsuffix='_right')
-        ttest = stats.ttest_rel(brier['brier_score_left'].tolist(),brier['brier_score_right'].tolist())
-        ci = ttest.confidence_interval()
-        l2 = [np.mean(brier['brier_score_left']) - np.mean(brier['brier_score_right']), ttest[1], ci[0], ci[1]]
-
-        comparison = pd.concat([pd.DataFrame([[prem, Ch, l1, l2]], 
-                                            columns=comparison.columns), comparison], 
-                                            ignore_index=True)
+    comparison = pd.DataFrame([holding_lst], columns=[ALL_LEAGUES[i-1][9:] if ALL_LEAGUES[i-1].startswith("Scottish ") else ALL_LEAGUES[i-1] for i in league_nums])
     return comparison
 
 
 def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title, country):
     comparison = compareModelsAggregate(getM1BrierScores, getM2BrierScores, country)
-    diffs = comparison.applymap(lambda x: x[0])
-    pvalues = comparison.applymap(lambda x: x[1])
-    lowerCI = comparison.applymap(lambda x: x[2])
-    upperCI = comparison.applymap(lambda x: x[3])
+    diffs = comparison.map(lambda x: x[0])
+    pvalues = comparison.map(lambda x: x[1])
+    lowerCI = comparison.map(lambda x: x[2])
+    upperCI = comparison.map(lambda x: x[3])
     
     df_combined = diffs.stack().reset_index()
     df_combined = df_combined.drop('level_0', axis=1)
@@ -334,7 +224,6 @@ def plotAggregateComparison(getM1BrierScores, getM2BrierScores, M1Title, M2Title
 
     savefig_to_images_dir(f"{M1Title} - {M2Title} AGG")
 
-    plt.show()
 
 def compareSRAggregate(getM1SuccessRatio, getM2SuccessRatio, country, excludel2 = False):
     """
@@ -421,7 +310,6 @@ def plotSRAggregateComparison(getM1SuccessRatio, getM2SuccessRatio, M1Title, M2T
     plt.ylabel('Difference in Success Ratios')
     savefig_to_images_dir(f"{M1Title} - {M2Title} AGG")
 
-    plt.show()
 
 # Odds - HA
 #plotComparison(BettingOddsModel.getBrierScores, HomeAdvModel.getBrierScores, "Betting Odds", "Home Advantage", "England")

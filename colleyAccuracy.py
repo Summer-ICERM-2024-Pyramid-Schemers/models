@@ -73,7 +73,6 @@ def plot_accuracy():
     plt.ylim(0.43, 0.82)
     plt.tight_layout()
     savefig_to_images_dir('colley_accuracy_line.png')
-    plt.show()
 
     plt.figure(figsize=(10, 6))
     for league in league_names.values():
@@ -88,7 +87,6 @@ def plot_accuracy():
     plt.tight_layout()
     plt.grid(True)
     savefig_to_images_dir("weighted_colley_accuracy_line.png")
-    plt.show()
 
     # Plot the bar graph
     plt.figure(figsize=(10, 6))
@@ -100,7 +98,6 @@ def plot_accuracy():
     #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
     savefig_to_images_dir("colley_accuracy_bar.png")
-    plt.show()
 
     plt.figure(figsize=(10, 6))
     plt.bar(average_wc_accuracies['League'], average_wc_accuracies['Accuracy'], color=[league_colors[league] for league in average_wc_accuracies['League']])
@@ -111,7 +108,6 @@ def plot_accuracy():
     #plt.xticks(rotation=45)
     plt.grid(True, axis='y')
     savefig_to_images_dir("weighted_colley_accuracy_bar.png")
-    plt.show()
 
     print(average_colley_accuracies)
     print(average_wc_accuracies)

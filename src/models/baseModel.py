@@ -68,7 +68,7 @@ class BaseModel(ABC):
             filename = cls._plot_filename or f"{cls.__name__}_brier_scores.png"
         
         leagues = [ALL_LEAGUES[l-1] if isinstance(l,int) else l for l in leagues]
-        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, ALL_LEAGUES.index(league)+1)["brier_score"].to_list()) for league in leagues] for season in seasons], columns=leagues, index=seasons)
+        briers = pd.DataFrame([[np.mean(cls.getBrierScores(season, ALL_LEAGUES.index(league)+1)["brier_score"]) for league in leagues] for season in seasons], columns=leagues, index=seasons)
 
         briers.plot()
         plt.title(title)
