@@ -59,7 +59,7 @@ def evaluation(ratings, EEOSR):
     '''
     Input
     ---------
-    ranings: 
+    ratings: 
         Massey ratings (calculated based on data before target season)
     EEOSR:
         end of season ranking for target (predicting) season
